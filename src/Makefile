@@ -10,9 +10,14 @@ release: linux windows osx
 	$(STRIP_LINUX)   *.bin
 	$(STRIP_WINDOWS) *.exe
 	$(STRIP_OSX)     *.app
+	mv *.bin ../bin
+	mv *.exe ../bin
+	mv *.app ../bin
+	cp *.pl ../bin
 
 clean:
-	rm -f core *.bin *.exe *.app
+	rm -f ../bin/*.bin ../bin/*.exe ../bin/*.app ../bin/*.pl
+	rm -f *.bin *.exe *.app
 
 ##
 ## LINUX

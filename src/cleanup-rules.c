@@ -78,6 +78,9 @@
 #define ATTACK_EXEC_ON_CPU 1
 #define ATTACK_EXEC_ON_GPU 2
 
+//#define MAX_CPU_RULES 31 // not enforced in hashcat
+#define MAX_GPU_RULES 14
+
 static int class_num (const char c)
 {
   return ((c >= '0') && (c <= '9'));
@@ -145,7 +148,7 @@ int main (int argc, char *argv[])
       switch (line_buf[pos])
       {
         case ' ':
-          break;
+          continue; // just skip all spaces around rules
 
         case RULE_OP_MANGLE_NOOP:
           break;
@@ -392,16 +395,20 @@ int main (int argc, char *argv[])
           break;
       }
 
+      if (rc == -1) break;
+
       cnt++;
 
-      if ((num == ATTACK_EXEC_ON_CPU) && (cnt >= 31))
+      /*
+      if ((num == ATTACK_EXEC_ON_CPU) && (cnt > MAX_CPU_RULES))
       {
         rc = -1;
 
         break;
       }
+      */
 
-      if ((num == ATTACK_EXEC_ON_GPU) && (cnt >= 15))
+      if ((num == ATTACK_EXEC_ON_GPU) && (cnt > MAX_GPU_RULES))
       {
         rc = -1;
 

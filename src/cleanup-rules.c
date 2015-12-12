@@ -79,7 +79,7 @@
 #define ATTACK_EXEC_ON_GPU 2
 
 //#define MAX_CPU_RULES 31 // not enforced in hashcat
-#define MAX_GPU_RULES 15
+#define MAX_GPU_RULES 14
 
 static int class_num (const char c)
 {

@@ -78,8 +78,8 @@
 #define ATTACK_EXEC_ON_CPU 1
 #define ATTACK_EXEC_ON_GPU 2
 
-//#define MAX_CPU_RULES 31 // not enforced in hashcat
-#define MAX_GPU_RULES 14
+#define MAX_CPU_RULES 255 // this is defined in include/types.h (oclHashcat)
+#define MAX_GPU_RULES 15
 
 static int class_num (const char c)
 {
@@ -399,14 +399,12 @@ int main (int argc, char *argv[])
 
       cnt++;
 
-      /*
       if ((num == ATTACK_EXEC_ON_CPU) && (cnt > MAX_CPU_RULES))
       {
         rc = -1;
 
         break;
       }
-      */
 
       if ((num == ATTACK_EXEC_ON_GPU) && (cnt > MAX_GPU_RULES))
       {

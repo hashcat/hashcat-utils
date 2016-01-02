@@ -2,7 +2,7 @@
 ##  Makefile
 ##
 
-CFLAGS = -Wall -W -pipe -O2
+CFLAGS = -Wall -W -pipe -O2 -std=c99
 
 all: clean release
 
@@ -48,6 +48,7 @@ linux:
 	${CC_LINUX} ${CFLAGS_LINUX} -o req-exclude.bin req-exclude.c
 	${CC_LINUX} ${CFLAGS_LINUX} -o rli.bin rli.c
 	${CC_LINUX} ${CFLAGS_LINUX} -o rli2.bin rli2.c
+	${CC_LINUX} ${CFLAGS_LINUX} -o rules_optimize.bin rules_optimize.c cpu_rules.c
 	${CC_LINUX} ${CFLAGS_LINUX} -o splitlen.bin splitlen.c
 	${CC_LINUX} ${CFLAGS_LINUX} -o strip-bsr.bin strip-bsr.c
 	${CC_LINUX} ${CFLAGS_LINUX} -o strip-bsn.bin strip-bsn.c
@@ -82,6 +83,7 @@ windows:
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o req-exclude.exe req-exclude.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o rli.exe rli.c ${GLOB_WINDOWS}
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o rli2.exe rli2.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o rules_optimize.exe rules_optimize.c cpu_rules.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o splitlen.exe splitlen.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o strip-bsr.exe strip-bsr.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o strip-bsn.exe strip-bsn.c
@@ -115,6 +117,7 @@ osx:
 	${CC_OSX} ${CFLAGS_OSX} -o req-exclude.app req-exclude.c
 	${CC_OSX} ${CFLAGS_OSX} -o rli.app rli.c
 	${CC_OSX} ${CFLAGS_OSX} -o rli2.app rli2.c
+	${CC_OSX} ${CFLAGS_OSX} -o rules_optimize.app rules_optimize.c cpu_rules.c
 	${CC_OSX} ${CFLAGS_OSX} -o splitlen.app splitlen.c
 	${CC_OSX} ${CFLAGS_OSX} -o strip-bsr.app strip-bsr.c
 	${CC_OSX} ${CFLAGS_OSX} -o strip-bsn.app strip-bsn.c

@@ -79,7 +79,7 @@
 #define ATTACK_EXEC_ON_GPU 2
 
 #define MAX_CPU_RULES 255 // this is defined in include/types.h (oclHashcat)
-#define MAX_GPU_RULES 14
+#define MAX_GPU_RULES 255
 
 static int class_num (const char c)
 {

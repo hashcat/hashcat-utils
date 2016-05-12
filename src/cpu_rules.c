@@ -1173,11 +1173,11 @@ char conv_ctoi (char c)
 {
   if (class_num (c))
   {
-    return c - '0';
+    return (char)(c - '0');
   }
   else if (class_upper (c))
   {
-    return c - 'A' + (char) 10;
+    return (char)(c - 'A' + (char) 10);
   }
 
   return (char) (-1);
@@ -1187,11 +1187,11 @@ char conv_itoc (char c)
 {
   if (c < 10)
   {
-    return c + '0';
+    return (char)(c + (char)'0');
   }
   else if (c < 37)
   {
-    return c + 'A' - (char) 10;
+    return (char)(c + (char)'A' - (char) 10);
   }
 
   return (char) (-1);

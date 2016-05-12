@@ -67,7 +67,7 @@ int main (int argc, char *argv[])
 
       for (j = 0; j < tmp_buf[tmp_pos]; j++)
       {
-        line_buf[line_pos] = tmp_pos;
+        line_buf[line_pos] = (uint8_t)tmp_pos;
 
         line_pos++;
       }

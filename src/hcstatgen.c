@@ -37,7 +37,7 @@
 
 static uint8_t hex_convert (uint8_t c)
 {
-  return (c & 15) + (c >> 6) * 9;
+  return (uint8_t)((c & 15) + (c >> 6) * 9);
 }
 
 int main (int argc, char *argv[])
@@ -111,18 +111,18 @@ int main (int argc, char *argv[])
 
       for (line_pos = 0; line_pos < line_len - 2; line_pos += 2)
       {
-        uint8_t c0 = hex_convert (line_buf[line_pos + 1]) << 0
-                   | hex_convert (line_buf[line_pos + 0]) << 4;
-        uint8_t c1 = hex_convert (line_buf[line_pos + 3]) << 0
-                   | hex_convert (line_buf[line_pos + 2]) << 4;
+        uint8_t c0 = (uint8_t)(  hex_convert (line_buf[line_pos + 1]) << 0
+                               | hex_convert (line_buf[line_pos + 0]) << 4);
+        uint8_t c1 = (uint8_t)(  hex_convert (line_buf[line_pos + 3]) << 0
+                               | hex_convert (line_buf[line_pos + 2]) << 4);
 
         root_stats_buf_by_pos[line_pos][c0]++;
 
         markov_stats_buf_by_key[line_pos][c0][c1]++;
       }
 
-      uint8_t c0 = hex_convert (line_buf[line_pos + 1]) << 0
-                 | hex_convert (line_buf[line_pos + 0]) << 4;
+      uint8_t c0 = (uint8_t)(  hex_convert (line_buf[line_pos + 1]) << 0
+                             | hex_convert (line_buf[line_pos + 0]) << 4);
 
       root_stats_buf_by_pos[line_pos][c0]++;
     }

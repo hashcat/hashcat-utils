@@ -95,11 +95,11 @@ static char conv_ctoi (const char c)
 {
   if (class_num (c))
   {
-    return c - '0';
+    return (char)(c - '0');
   }
   else if (class_upper (c))
   {
-    return c - 'A' + 10;
+    return (char)(c - 'A' + 10);
   }
 
   return -1;

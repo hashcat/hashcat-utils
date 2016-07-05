@@ -2,7 +2,7 @@
 ##  Makefile
 ##
 
-CFLAGS = -Wall -W -pipe -O2 -std=c99
+CFLAGS += -Wall -W -pipe -O2 -std=c99
 
 all: clean release
 
@@ -23,35 +23,37 @@ clean:
 ## LINUX
 ##
 
-CC_LINUX       = gcc
+CC            ?= gcc
+CC_LINUX       = $(CC)
 STRIP_LINUX    = strip
 CFLAGS_LINUX   = $(CFLAGS) -D_LINUX
+LDFLAGS_LINUX  = $(LDFLAGS)
 
 linux:
-	${CC_LINUX} ${CFLAGS_LINUX} -o cleanup-rules.bin cleanup-rules.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o combinator.bin combinator.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o combinator3.bin combinator3.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o combipow.bin combipow.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o cutb.bin cutb.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o expander.bin expander.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o gate.bin gate.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o generate-rules.bin generate-rules.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o hcstatgen.bin hcstatgen.c -lm
-	${CC_LINUX} ${CFLAGS_LINUX} -o keyspace.bin keyspace.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o len.bin len.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o mli2.bin mli2.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o morph.bin morph.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o permute.bin permute.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o permute_exist.bin permute_exist.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o prepare.bin prepare.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o req-include.bin req-include.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o req-exclude.bin req-exclude.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o rli.bin rli.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o rli2.bin rli2.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o rules_optimize.bin rules_optimize.c cpu_rules.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o splitlen.bin splitlen.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o strip-bsr.bin strip-bsr.c
-	${CC_LINUX} ${CFLAGS_LINUX} -o strip-bsn.bin strip-bsn.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o cleanup-rules.bin cleanup-rules.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o combinator.bin combinator.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o combinator3.bin combinator3.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o combipow.bin combipow.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o cutb.bin cutb.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o expander.bin expander.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o gate.bin gate.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o generate-rules.bin generate-rules.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o hcstatgen.bin hcstatgen.c -lm
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o keyspace.bin keyspace.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o len.bin len.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o mli2.bin mli2.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o morph.bin morph.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o permute.bin permute.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o permute_exist.bin permute_exist.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o prepare.bin prepare.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o req-include.bin req-include.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o req-exclude.bin req-exclude.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o rli.bin rli.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o rli2.bin rli2.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o rules_optimize.bin rules_optimize.c cpu_rules.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o splitlen.bin splitlen.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o strip-bsr.bin strip-bsr.c
+	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o strip-bsn.bin strip-bsn.c
 
 ##
 ## WINDOWS

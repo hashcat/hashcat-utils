@@ -567,7 +567,7 @@ uint64_t keyspace (const int in_len, const uint8_t *in_buf, cs_t mp_sys[5], cs_t
 void usage (char *program)
 {
   const char *help_text[] = {
-    "%s, keyspace utility for oclHashcat",
+    "%s, keyspace utility for hashcat",
     "",
     "Usage: %s [options] mask",
     "",

@@ -78,7 +78,7 @@
 #define ATTACK_EXEC_ON_CPU 1
 #define ATTACK_EXEC_ON_GPU 2
 
-#define MAX_CPU_RULES 255 // this is defined in include/types.h (oclHashcat)
+#define MAX_CPU_RULES 255 // this is defined in include/types.h (hashcat)
 #define MAX_GPU_RULES 255
 
 static int class_num (const char c)
@@ -243,7 +243,6 @@ int main (int argc, char *argv[])
 
         case RULE_OP_MANGLE_PURGECHAR:
           NEXT_RULEPOS;
-          DENY_GPU;
           break;
 
         case RULE_OP_MANGLE_TOGGLECASE_REC:

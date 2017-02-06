@@ -1,3 +1,7 @@
+* v1.3 -> v1.4
+
+- Add pragma to cap2hccapx.c to workaround broken packed handling on mingw
+
 * v1.2 -> v1.3
 
 - Added cap2hccapx.c

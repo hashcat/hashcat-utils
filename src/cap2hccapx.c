@@ -7,9 +7,9 @@
 #include <inttypes.h>
 
 #if defined (_WIN32) || defined (_WIN64)
-#define LSEARCH_CAST (unsigned int *)
+typedef unsigned int lsearch_cnt_t;
 #else
-#define LSEARCH_CAST
+typedef size_t lsearch_cnt_t;
 #endif
 
 /**
@@ -228,11 +228,11 @@ typedef struct
 #define DB_ESSID_MAX  1000
 #define DB_EXCPKT_MAX 100000
 
-essid_t *essids = NULL;
-size_t   essids_cnt = 0;
+essid_t      *essids = NULL;
+lsearch_cnt_t essids_cnt = 0;
 
-excpkt_t *excpkts = NULL;
-size_t    excpkts_cnt = 0;
+excpkt_t     *excpkts = NULL;
+lsearch_cnt_t excpkts_cnt = 0;
 
 // output
 
@@ -325,7 +325,7 @@ static void db_excpkt_add (excpkt_t *excpkt, const u32 tv_sec, const u32 tv_usec
   memcpy (excpkt->mac_ap,  mac_ap,  6);
   memcpy (excpkt->mac_sta, mac_sta, 6);
 
-  lsearch (excpkt, excpkts, LSEARCH_CAST &excpkts_cnt, sizeof (excpkt_t), comp_excpkt);
+  lsearch (excpkt, excpkts, &excpkts_cnt, sizeof (excpkt_t), comp_excpkt);
 }
 
 static void db_essid_add (essid_t *essid, const u8 addr3[6])
@@ -339,7 +339,7 @@ static void db_essid_add (essid_t *essid, const u8 addr3[6])
 
   memcpy (essid->bssid, addr3, 6);
 
-  lsearch (essid, essids, LSEARCH_CAST &essids_cnt, sizeof (essid_t), comp_bssid);
+  lsearch (essid, essids, &essids_cnt, sizeof (essid_t), comp_bssid);
 }
 
 static int handle_llc (const ieee80211_llc_snap_header_t *ieee80211_llc_snap_header)
@@ -484,7 +484,7 @@ static int get_essid_from_user (char *s)
   essid.bssid[4] = hex_to_u8 ((u8 *) man_bssid); man_bssid += 2;
   essid.bssid[5] = hex_to_u8 ((u8 *) man_bssid); man_bssid += 2;
 
-  lsearch (&essid, essids, LSEARCH_CAST &essids_cnt, sizeof (essid_t), comp_bssid);
+  lsearch (&essid, essids, &essids_cnt, sizeof (essid_t), comp_bssid);
 
   return 0;
 }
@@ -786,7 +786,7 @@ int main (int argc, char *argv[])
 
   // find matching packets
 
-  for (size_t essids_pos = 0; essids_pos < essids_cnt; essids_pos++)
+  for (lsearch_cnt_t essids_pos = 0; essids_pos < essids_cnt; essids_pos++)
   {
     const essid_t *essid = essids + essids_pos;
 
@@ -802,7 +802,7 @@ int main (int argc, char *argv[])
       essid->essid,
       essid->essid_len);
 
-    for (size_t excpkt_ap_pos = 0; excpkt_ap_pos < excpkts_cnt; excpkt_ap_pos++)
+    for (lsearch_cnt_t excpkt_ap_pos = 0; excpkt_ap_pos < excpkts_cnt; excpkt_ap_pos++)
     {
       const excpkt_t *excpkt_ap = excpkts + excpkt_ap_pos;
 
@@ -810,7 +810,7 @@ int main (int argc, char *argv[])
 
       if (memcmp (essid->bssid, excpkt_ap->mac_ap, 6) != 0) continue;
 
-      for (size_t excpkt_sta_pos = 0; excpkt_sta_pos < excpkts_cnt; excpkt_sta_pos++)
+      for (lsearch_cnt_t excpkt_sta_pos = 0; excpkt_sta_pos < excpkts_cnt; excpkt_sta_pos++)
       {
         const excpkt_t *excpkt_sta = excpkts + excpkt_sta_pos;
 

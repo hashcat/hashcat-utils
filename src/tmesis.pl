@@ -46,7 +46,7 @@ while (my $word = <>)
   {
     my @rule;
 
-    for (my $word_pos = 0; $word_pos < $word_len; $word_pos++)
+    for (my $word_pos = 0; $word_pos < $word_len; $word_pos+=2)
     {
       my $function_full = $function . $intpos_to_rulepos[$rule_pos + $word_pos] . $word_buf[$word_pos];
 

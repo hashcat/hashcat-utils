@@ -1,6 +1,15 @@
-* v1.2 -> v1.2
+* v1.3 -> v1.4
 
-- After compilation, move binaries from src folder into bin folder
+- Add pragma to cap2hccapx.c to workaround broken packed handling on mingw
+
+* v1.2 -> v1.3
+
+- Added cap2hccapx.c
+- Added ct3_to_ntlm.c
+- Added deskey_to_ntlm.pl
+- Added tmesis.pl
+- Added release makefile target: move binaries from src folder into bin folder
+- cleanup-rules: fixes #12, allow @X (purge) rule for the rule-engine on GPU
 
 * v1.1 -> v1.2
 

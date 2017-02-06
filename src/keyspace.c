@@ -45,7 +45,7 @@ typedef struct
 
 uint8_t hex_convert (const uint8_t c)
 {
-  return (c & 15) + (c >> 6) * 9;
+  return (uint8_t)((c & 15) + (c >> 6) * 9);
 }
 
 void mp_css_to_uniq_tbl (const int css_cnt, cs_t *css_buf, int uniq_tbls[SP_PW_MAX][CHARSIZ])
@@ -155,8 +155,8 @@ void mp_expand (const int in_len, const uint8_t *in_buf, cs_t *mp_sys, cs_t *mp_
 
         const uint8_t p1 = in_buf[in_pos];
 
-        const uint8_t chr = hex_convert (p1) << 0
-                          | hex_convert (p0) << 4;
+        const uint8_t chr = (uint8_t)(  hex_convert (p1) << 0
+                                      | hex_convert (p0) << 4);
 
         mp_add_cs_buf (1, &chr, css_pos, mp_usr);
       }
@@ -227,8 +227,8 @@ cs_t *mp_gen_css (const int in_len, const uint8_t *in_buf, cs_t *mp_sys, cs_t *m
 
         const uint8_t p1 = in_buf[in_pos];
 
-        const uint8_t chr = hex_convert (p1) << 0
-                          | hex_convert (p0) << 4;
+        const uint8_t chr = (uint8_t)(  hex_convert (p1) << 0
+                                      | hex_convert (p0) << 4);
 
         mp_add_cs_buf (1, &chr, css_pos, css_buf);
       }
@@ -256,25 +256,25 @@ void mp_setup_sys (cs_t *mp_sys)
   memset (donec, 0, sizeof (donec));
 
   for (pos = 0, chr =  'a'; chr <=  'z'; chr++) { donec[chr] = 1;
-                                                  mp_sys[0].cs_buf[pos++] = chr;
+                                                  mp_sys[0].cs_buf[pos++] = (uint8_t)chr;
                                                   mp_sys[0].cs_len = pos; }
 
   for (pos = 0, chr =  'A'; chr <=  'Z'; chr++) { donec[chr] = 1;
-                                                  mp_sys[1].cs_buf[pos++] = chr;
+                                                  mp_sys[1].cs_buf[pos++] = (uint8_t)chr;
                                                   mp_sys[1].cs_len = pos; }
 
   for (pos = 0, chr =  '0'; chr <=  '9'; chr++) { donec[chr] = 1;
-                                                  mp_sys[2].cs_buf[pos++] = chr;
+                                                  mp_sys[2].cs_buf[pos++] = (uint8_t)chr;
                                                   mp_sys[2].cs_len = pos; }
 
   for (pos = 0, chr = 0x20; chr <= 0x7e; chr++) { if (donec[chr]) continue;
-                                                  mp_sys[3].cs_buf[pos++] = chr;
+                                                  mp_sys[3].cs_buf[pos++] = (uint8_t)chr;
                                                   mp_sys[3].cs_len = pos; }
 
-  for (pos = 0, chr = 0x20; chr <= 0x7e; chr++) { mp_sys[4].cs_buf[pos++] = chr;
+  for (pos = 0, chr = 0x20; chr <= 0x7e; chr++) { mp_sys[4].cs_buf[pos++] = (uint8_t)chr;
                                                   mp_sys[4].cs_len = pos; }
 
-  for (pos = 0, chr = 0x00; chr <= 0xff; chr++) { mp_sys[5].cs_buf[pos++] = chr;
+  for (pos = 0, chr = 0x00; chr <= 0xff; chr++) { mp_sys[5].cs_buf[pos++] = (uint8_t)chr;
                                                   mp_sys[5].cs_len = pos; }
 }
 
@@ -402,7 +402,7 @@ void sp_setup_tbl (const char *markov_hcstat, hcstat_table_t *root_table_buf, hc
 
   for (i = 0; i < SP_ROOT_CNT; i++)
   {
-    const uint8_t key = i % CHARSIZ;
+    const uint8_t key = (uint8_t)(i % CHARSIZ);
 
     root_table_buf[i].key = key;
     root_table_buf[i].val = root_stats_buf[i];
@@ -410,7 +410,7 @@ void sp_setup_tbl (const char *markov_hcstat, hcstat_table_t *root_table_buf, hc
 
   for (i = 0; i < SP_MARKOV_CNT; i++)
   {
-    const uint8_t key = i % CHARSIZ;
+    const uint8_t key = (uint8_t)(i % CHARSIZ);
 
     markov_table_buf[i].key = key;
     markov_table_buf[i].val = markov_stats_buf[i];
@@ -567,7 +567,7 @@ uint64_t keyspace (const int in_len, const uint8_t *in_buf, cs_t mp_sys[5], cs_t
 void usage (char *program)
 {
   const char *help_text[] = {
-    "%s, keyspace utility for oclHashcat",
+    "%s, keyspace utility for hashcat",
     "",
     "Usage: %s [options] mask",
     "",

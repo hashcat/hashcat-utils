@@ -847,7 +847,7 @@ int main (int argc, char *argv[])
         hccapx_t hccapx;
 
         hccapx.signature = HCCAPX_SIGNATURE;
-        hccapx.version = 2;
+        hccapx.version = 3;
 
         hccapx.authenticated = authenticated;
 

@@ -6,6 +6,8 @@
 #include <errno.h>
 #include <inttypes.h>
 
+#pragma pack(1)
+
 #if defined (_WIN32) || defined (_WIN64)
 typedef unsigned int lsearch_cnt_t;
 #else

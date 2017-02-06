@@ -4,57 +4,56 @@
 
 CFLAGS += -Wall -W -pipe -O2 -std=c99
 
-all: clean release
+all: clean native
 
-release: linux windows osx
-	$(STRIP_LINUX)   *.bin
+release: native windows
+	$(STRIP_NATIVE) *.bin
 	$(STRIP_WINDOWS) *.exe
-	$(STRIP_OSX)     *.app
 	mv *.bin ../bin
 	mv *.exe ../bin
-	mv *.app ../bin
-	cp *.pl ../bin
+	cp -a *.pl ../bin
 
 clean:
-	rm -f ../bin/*.bin ../bin/*.exe ../bin/*.app ../bin/*.pl
-	rm -f *.bin *.exe *.app
+	rm -f ../bin/*
+	rm -f *.bin *.exe
 
 ##
-## LINUX
+## native
 ##
 
 CC            ?= gcc
-CC_LINUX       = $(CC)
-STRIP_LINUX    = strip
-CFLAGS_LINUX   = $(CFLAGS) -D_LINUX
-LDFLAGS_LINUX  = $(LDFLAGS)
+CC_NATIVE      = $(CC)
+STRIP_NATIVE   = strip
+CFLAGS_NATIVE  = $(CFLAGS)
+LDFLAGS_NATIVE = $(LDFLAGS)
 
-linux:
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o cleanup-rules.bin cleanup-rules.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o combinator.bin combinator.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o combinator3.bin combinator3.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o combipow.bin combipow.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o ct3_to_ntlm.bin ct3_to_ntlm.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o cutb.bin cutb.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o expander.bin expander.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o gate.bin gate.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o generate-rules.bin generate-rules.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o hcstatgen.bin hcstatgen.c -lm
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o keyspace.bin keyspace.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o len.bin len.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o mli2.bin mli2.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o morph.bin morph.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o permute.bin permute.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o permute_exist.bin permute_exist.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o prepare.bin prepare.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o req-include.bin req-include.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o req-exclude.bin req-exclude.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o rli.bin rli.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o rli2.bin rli2.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o rules_optimize.bin rules_optimize.c cpu_rules.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o splitlen.bin splitlen.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o strip-bsr.bin strip-bsr.c
-	${CC_LINUX} ${CFLAGS_LINUX} ${LDFLAGS_LINUX} -o strip-bsn.bin strip-bsn.c
+native:
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o cap2hccapx.bin cap2hccapx.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o cleanup-rules.bin cleanup-rules.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o combinator.bin combinator.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o combinator3.bin combinator3.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o combipow.bin combipow.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o ct3_to_ntlm.bin ct3_to_ntlm.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o cutb.bin cutb.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o expander.bin expander.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o gate.bin gate.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o generate-rules.bin generate-rules.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o hcstatgen.bin hcstatgen.c -lm
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o keyspace.bin keyspace.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o len.bin len.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o mli2.bin mli2.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o morph.bin morph.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o permute.bin permute.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o permute_exist.bin permute_exist.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o prepare.bin prepare.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o req-include.bin req-include.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o req-exclude.bin req-exclude.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o rli.bin rli.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o rli2.bin rli2.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o rules_optimize.bin rules_optimize.c cpu_rules.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o splitlen.bin splitlen.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o strip-bsr.bin strip-bsr.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o strip-bsn.bin strip-bsn.c
 
 ##
 ## WINDOWS
@@ -66,6 +65,7 @@ CFLAGS_WINDOWS = $(CFLAGS) -D_WINDOWS
 GLOB_WINDOWS   = /usr/x86_64-w64-mingw32/lib/CRT_glob.o
 
 windows:
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o cap2hccapx.exe cap2hccapx.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o cleanup-rules.exe cleanup-rules.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o combinator.exe combinator.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o combinator3.exe combinator3.c
@@ -91,38 +91,3 @@ windows:
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o splitlen.exe splitlen.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o strip-bsr.exe strip-bsr.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o strip-bsn.exe strip-bsn.c
-
-##
-## OSX
-##
-
-CC_OSX     = i686-apple-darwin10-gcc
-STRIP_OSX  = i686-apple-darwin10-strip
-CFLAGS_OSX = $(CFLAGS) -D_OSX
-
-osx:
-	${CC_OSX} ${CFLAGS_OSX} -o cleanup-rules.app cleanup-rules.c
-	${CC_OSX} ${CFLAGS_OSX} -o combinator.app combinator.c
-	${CC_OSX} ${CFLAGS_OSX} -o combinator3.app combinator3.c
-	${CC_OSX} ${CFLAGS_OSX} -o combipow.app combipow.c
-	${CC_OSX} ${CFLAGS_OSX} -o ct3_to_ntlm.app ct3_to_ntlm.c
-	${CC_OSX} ${CFLAGS_OSX} -o cutb.app cutb.c
-	${CC_OSX} ${CFLAGS_OSX} -o expander.app expander.c
-	${CC_OSX} ${CFLAGS_OSX} -o gate.app gate.c
-	${CC_OSX} ${CFLAGS_OSX} -o generate-rules.app generate-rules.c
-	${CC_OSX} ${CFLAGS_OSX} -o hcstatgen.app hcstatgen.c -lm
-	${CC_OSX} ${CFLAGS_OSX} -o keyspace.app keyspace.c
-	${CC_OSX} ${CFLAGS_OSX} -o len.app len.c
-	${CC_OSX} ${CFLAGS_OSX} -o mli2.app mli2.c
-	${CC_OSX} ${CFLAGS_OSX} -o morph.app morph.c
-	${CC_OSX} ${CFLAGS_OSX} -o permute.app permute.c
-	${CC_OSX} ${CFLAGS_OSX} -o permute_exist.app permute_exist.c
-	${CC_OSX} ${CFLAGS_OSX} -o prepare.app prepare.c
-	${CC_OSX} ${CFLAGS_OSX} -o req-include.app req-include.c
-	${CC_OSX} ${CFLAGS_OSX} -o req-exclude.app req-exclude.c
-	${CC_OSX} ${CFLAGS_OSX} -o rli.app rli.c
-	${CC_OSX} ${CFLAGS_OSX} -o rli2.app rli2.c
-	${CC_OSX} ${CFLAGS_OSX} -o rules_optimize.app rules_optimize.c cpu_rules.c
-	${CC_OSX} ${CFLAGS_OSX} -o splitlen.app splitlen.c
-	${CC_OSX} ${CFLAGS_OSX} -o strip-bsr.app strip-bsr.c
-	${CC_OSX} ${CFLAGS_OSX} -o strip-bsn.app strip-bsn.c

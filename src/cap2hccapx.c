@@ -46,7 +46,7 @@ typedef uint64_t u64;
 #define DLT_RAW3        101
 
 #define DLT_IEEE802_11  105 /* IEEE 802.11 wireless */
-#define DLT_LINUX_SLL   113
+#define DLT_IEEE802_11_RADIO 127
 
 struct pcap_file_header {
   u32 magic;
@@ -159,6 +159,19 @@ typedef struct ieee80211_llc_snap_header ieee80211_llc_snap_header_t;
 #define WPA_KEY_INFO_ERROR WBIT(10)
 #define WPA_KEY_INFO_REQUEST WBIT(11)
 #define WPA_KEY_INFO_ENCR_KEY_DATA WBIT(12) /* IEEE 802.11i/RSN only */
+
+// radiotap header from http://www.radiotap.org/
+
+struct ieee80211_radiotap_header
+{
+  u8  it_version;     /* set to 0 */
+  u8  it_pad;
+  u16 it_len;         /* entire length */
+  u32 it_present;     /* fields present */
+
+} __attribute__((packed));
+
+typedef struct ieee80211_radiotap_header ieee80211_radiotap_header_t;
 
 // own structs
 
@@ -723,7 +736,7 @@ int main (int argc, char *argv[])
     pcap_file_header.linktype       = __builtin_bswap32 (pcap_file_header.linktype);
   }
 
-  if (pcap_file_header.linktype != DLT_IEEE802_11)
+  if ((pcap_file_header.linktype != DLT_IEEE802_11) && (pcap_file_header.linktype != DLT_IEEE802_11_RADIO))
   {
     fprintf (stderr, "%s: Unsupported linktype detected\n", in);
 
@@ -766,7 +779,32 @@ int main (int argc, char *argv[])
       return -1;
     }
 
-    process_packet (packet, &header);
+    u8 *packet_ptr = packet;
+
+  	if (pcap_file_header.linktype == DLT_IEEE802_11_RADIO)
+    {
+      if (header.caplen < sizeof (ieee80211_radiotap_header_t))
+      {
+        fprintf (stderr, "%s: Could not read radiotap header\n", in);
+
+        return -1;
+      }
+
+      ieee80211_radiotap_header_t *ieee80211_radiotap_header = (ieee80211_radiotap_header_t *) packet;
+
+      if (ieee80211_radiotap_header->it_version != 0)
+      {
+        fprintf (stderr, "%s: Invalid radiotap header\n", in);
+
+        return -1;
+      }
+
+      packet_ptr    += ieee80211_radiotap_header->it_len;
+      header.caplen -= ieee80211_radiotap_header->it_len;
+      header.len    -= ieee80211_radiotap_header->it_len;
+    }
+
+    process_packet (packet_ptr, &header);
   }
 
   fclose (pcap);

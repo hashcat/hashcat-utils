@@ -409,6 +409,8 @@ static int handle_auth (const auth_packet_t *auth_packet, const int pkt_offset, 
 
     if ((pkt_offset + excpkt->eapol_len) > pkt_size) return -1;
 
+    if ((sizeof (auth_packet_t) + ap_wpa_key_data_length) > sizeof (excpkt->eapol)) return -1;
+
     // we need to copy the auth_packet_t but have to clear the keymic
     auth_packet_t auth_packet_orig;
 

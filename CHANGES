@@ -1,3 +1,8 @@
+* v1.4 -> v1.5
+
+- Add support to readl radiotap header with cap2hccap
+- Fixed packet handling for cap2hccap on windows
+
 * v1.3 -> v1.4
 
 - Add pragma to cap2hccapx.c to workaround broken packed handling on mingw

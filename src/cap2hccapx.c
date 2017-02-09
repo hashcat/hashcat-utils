@@ -12,6 +12,8 @@ typedef unsigned int lsearch_cnt_t;
 typedef size_t lsearch_cnt_t;
 #endif
 
+#pragma pack(1)
+
 /**
  * Name........: cap2hccapx.c
  * Autor.......: Jens Steube <jens.steube@gmail.com>, Philipp "philsmd" Schmidt <philsmd@hashcat.net>
@@ -251,9 +253,6 @@ lsearch_cnt_t excpkts_cnt = 0;
 
 #define HCCAPX_SIGNATURE 0x58504348 // HCPX
 
-// this is required to force mingw to accept the packed attribute
-#pragma pack(push,1)
-
 struct hccapx
 {
   u32 signature;
@@ -273,8 +272,6 @@ struct hccapx
 } __attribute__((packed));
 
 typedef struct hccapx hccapx_t;
-
-#pragma pack(pop)
 
 // functions
 

@@ -1,4 +1,3 @@
-bin/*.bin
-bin/*.exe
-bin/*.app
-bin/*.pl
+*.bin
+*.exe
+bin/

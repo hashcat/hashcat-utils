@@ -919,10 +919,14 @@ int main (int argc, char *argv[])
 
         if (excpkt_ap->excpkt_num == EXC_PKT_NUM_1)
         {
+          if (excpkt_ap->tv_sec > excpkt_sta->tv_sec) continue;
+
           if ((excpkt_ap->tv_sec + EAPOL_TTL) < excpkt_sta->tv_sec) continue;
         }
         else
         {
+          if (excpkt_sta->tv_sec > excpkt_ap->tv_sec) continue;
+
           if ((excpkt_sta->tv_sec + EAPOL_TTL) < excpkt_ap->tv_sec) continue;
         }
 

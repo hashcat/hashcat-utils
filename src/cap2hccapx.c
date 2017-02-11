@@ -48,6 +48,7 @@ typedef uint64_t u64;
 #define DLT_RAW3        101
 
 #define DLT_IEEE802_11  105 /* IEEE 802.11 wireless */
+#define DLT_IEEE802_11_PRISM 119
 #define DLT_IEEE802_11_RADIO 127
 
 struct pcap_file_header {
@@ -61,8 +62,8 @@ struct pcap_file_header {
 };
 
 struct pcap_pkthdr {
-	u32 tv_sec;   /* timestamp seconds */
-	u32 tv_usec;  /* timestamp microseconds */
+  u32 tv_sec;   /* timestamp seconds */
+  u32 tv_usec;  /* timestamp microseconds */
   u32 caplen;   /* length of portion present */
   u32 len;      /* length this packet (off wire) */
 };
@@ -174,6 +175,42 @@ struct ieee80211_radiotap_header
 } __attribute__((packed));
 
 typedef struct ieee80211_radiotap_header ieee80211_radiotap_header_t;
+
+// prism header
+
+#define WLAN_DEVNAMELEN_MAX 16
+
+struct prism_item
+{
+  u32 did;
+  u16 status;
+  u16 len;
+  u32 data;
+
+} __attribute__((packed));
+
+struct prism_header
+{
+ u32 msgcode;
+ u32 msglen;
+
+ char devname[WLAN_DEVNAMELEN_MAX];
+
+ struct prism_item hosttime;
+ struct prism_item mactime;
+ struct prism_item channel;
+ struct prism_item rssi;
+ struct prism_item sq;
+ struct prism_item signal;
+ struct prism_item noise;
+ struct prism_item rate;
+ struct prism_item istx;
+ struct prism_item frmlen;
+
+} __attribute__((packed));
+
+typedef struct prism_item prism_item_t;
+typedef struct prism_header prism_header_t;
 
 // own structs
 
@@ -733,7 +770,9 @@ int main (int argc, char *argv[])
     pcap_file_header.linktype       = __builtin_bswap32 (pcap_file_header.linktype);
   }
 
-  if ((pcap_file_header.linktype != DLT_IEEE802_11) && (pcap_file_header.linktype != DLT_IEEE802_11_RADIO))
+  if ((pcap_file_header.linktype != DLT_IEEE802_11)
+   && (pcap_file_header.linktype != DLT_IEEE802_11_PRISM)
+   && (pcap_file_header.linktype != DLT_IEEE802_11_RADIO))
   {
     fprintf (stderr, "%s: Unsupported linktype detected\n", in);
 
@@ -778,7 +817,22 @@ int main (int argc, char *argv[])
 
     u8 *packet_ptr = packet;
 
-  	if (pcap_file_header.linktype == DLT_IEEE802_11_RADIO)
+    if (pcap_file_header.linktype == DLT_IEEE802_11_PRISM)
+    {
+      if (header.caplen < sizeof (prism_header_t))
+      {
+        fprintf (stderr, "%s: Could not read prism header\n", in);
+
+        return -1;
+      }
+
+      prism_header_t *prism_header = (prism_header_t *) packet;
+
+      packet_ptr    += prism_header->msglen;
+      header.caplen -= prism_header->msglen;
+      header.len    -= prism_header->msglen;
+    }
+    else if (pcap_file_header.linktype == DLT_IEEE802_11_RADIO)
     {
       if (header.caplen < sizeof (ieee80211_radiotap_header_t))
       {

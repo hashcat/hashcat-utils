@@ -52,6 +52,9 @@ int main (int argc, char *argv[])
     {
       int chr = (int) line_buf[p];
 
+      if (chr < 0) continue;
+      if (chr >= TMPSIZ) continue;
+
       tmp_buf[chr]++;
     }
 

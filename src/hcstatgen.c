@@ -152,7 +152,10 @@ int main (int argc, char *argv[])
         markov_stats_buf_by_key[line_pos][c0][c1]++;
       }
 
-      uint8_t c0 = line_buf[line_pos + 0];
+      int c0 = (int) line_buf[line_pos + 0];
+
+      if (c0 < 0) continue;
+      if (c0 >= CHARSIZ) continue;
 
       root_stats_buf_by_pos[line_pos][c0]++;
     }

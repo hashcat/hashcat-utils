@@ -480,7 +480,7 @@ void sp_tbl_to_css (hcstat_table_t *root_table_buf, hcstat_table_t *markov_table
   }
 }
 
-uint64_t keyspace (const int in_len, const uint8_t *in_buf, cs_t mp_sys[5], cs_t mp_usr[4], const char *markov_hcstat, const uint32_t markov_threshold, const int opts_type, const int hex_charset)
+uint64_t keyspace (const int in_len, const uint8_t *in_buf, cs_t *mp_sys, cs_t *mp_usr, const char *markov_hcstat, const uint32_t markov_threshold, const int opts_type, const int hex_charset)
 {
   int css_cnt = 0;
 

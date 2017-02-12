@@ -561,7 +561,17 @@ uint64_t keyspace (const int in_len, const uint8_t *in_buf, cs_t *mp_sys, cs_t *
     }
   }
 
-  return sp_get_sum (css_cnt_r, css_cnt, root_css_buf);
+  const uint64_t sum = sp_get_sum (css_cnt_r, css_cnt, root_css_buf);
+
+  free (root_css_buf);
+  free (markov_css_buf);
+
+  free (root_table_buf);
+  free (markov_table_buf);
+
+  free (css_buf);
+
+  return sum;
 }
 
 void usage (char *program)

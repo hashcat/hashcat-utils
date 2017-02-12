@@ -41,7 +41,7 @@ int main (int argc, char *argv[])
   {
     char name[BUFSIZ];
 
-    sprintf (name, "%s/%02d", argv[1], i);
+    snprintf (name, BUFSIZ, "%s/%02d", argv[1], i);
 
     fps[i] = fopen (name, "wb");
 

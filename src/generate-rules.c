@@ -129,7 +129,14 @@ int main (int argc, char *argv[])
     return (-1);
   }
 
-  int num = atoi (argv[1]);
+  const int num = atoi (argv[1]);
+
+  if ((num < 1) || (num > 1000000000))
+  {
+    fprintf (stderr, "invalid rule count\n");
+
+    return (-1);
+  }
 
   time_t seed;
 

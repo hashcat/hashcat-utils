@@ -55,5 +55,18 @@ uint get_random_num (const uint min, const uint max)
 {
   if (min == max) return (min);
 
-  return ((rand () % (max - min)) + min);
+  const uint low = max - min;
+
+  if (low == 0) return (0);
+
+  uint64_t r = rand () % low;
+
+  r += min;
+
+  if (r > 0xffffffff)
+  {
+    exit (-1);
+  }
+
+  return (uint) r;
 }

@@ -1197,9 +1197,13 @@ char conv_itoc (char c)
   return (char) (-1);
 }
 
-uint get_random_num (uint min, uint max)
+uint get_random_num (const uint min, const uint max)
 {
   if (min == max) return (min);
+
+  const uint low = max - min;
+
+  if (low == 0) return (0);
 
   uint data;
 
@@ -1209,10 +1213,19 @@ uint get_random_num (uint min, uint max)
 
   if ((fread (&data, 1, sizeof (uint), fp)) != sizeof (uint))
   {
-    exit (1);
+    exit (-1);
   }
 
   fclose (fp);
 
-  return (uint) ((data % (max - min)) + min);
+  uint64_t r = data % low;
+
+  r += min;
+
+  if (r > 0xffffffff)
+  {
+    exit (-1);
+  }
+
+  return (uint) r;
 }

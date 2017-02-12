@@ -170,7 +170,7 @@ int main ()
 
     block_cnt++;
 
-    if (block_cnt < MIN_FUNCTIONS) continue; // to many
+    //if (block_cnt < MIN_FUNCTIONS) continue; // to many
     if (block_cnt > MAX_FUNCTIONS) continue; // to many
 
     /*

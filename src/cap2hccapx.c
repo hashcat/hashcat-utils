@@ -485,10 +485,6 @@ static int handle_auth (const auth_packet_t *auth_packet, const int pkt_offset, 
   {
     return -1;
   }
-  else
-  {
-    return -1;
-  }
 
   return 0;
 }

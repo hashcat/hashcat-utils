@@ -23,7 +23,7 @@ typedef uint64_t u64;
 #define true 1
 #define LINE_SIZE 64
 #define LINE_LIMIT 15 + 1  /* we add one to the limit for the null terminator */
-#define MAX_LINES 64       /* this is the limit of using a single unsigned 64-bit integer */
+#define MAX_LINES 63       /* this is the limit of using a single unsigned 64-bit integer */
                            /* exceeding this count will cause the counters to wrap */
 
 int usage (char *progname)

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <inttypes.h>
 
 /**
  * Name........: Combined-Power Utility
@@ -14,7 +15,9 @@
  *
  */
 
-typedef int bool;
+typedef uint32_t bool;
+typedef uint32_t u32;
+typedef uint64_t u64;
 
 #define false 0
 #define true 1
@@ -51,12 +54,12 @@ int main (int argc, char *argv[])
   char *f1, *f2;
 
   f1 = f2 = "\0";
-  unsigned int i;
-  int lines;
+  u64 i;
+  u32 lines;
 
   char *progname = argv[0];
 
-  for (i = 1; i < (unsigned int) argc; i++)
+  for (i = 1; i < (u64) argc; i++)
   {
     if (*(argv[i] + 0) == '-')
     {
@@ -143,11 +146,11 @@ int main (int argc, char *argv[])
       continue;
     }
 
-    int length = strlen (line);
+    u32 length = strlen (line);
 
     // copy line...
     // but without newline char(s)
-    if ((int) line[length - 2] == '\r') length--;
+    if (line[length - 2] == '\r') length--;
 
     buf[i] = calloc (length, sizeof (char));
 
@@ -167,19 +170,20 @@ int main (int argc, char *argv[])
   /* printf ("%d lines found.\n", lines); */
 
   /* find combinations */
-  int j;
+  u64 j;
+  u32 pad_size = op_limit ? 1 : 0;
+
   bool pad;
   char lb[LINE_LIMIT];
-  int pad_size = op_limit ? 1 : 0;
 
-  for (i = 1; i < (unsigned int) (1 << lines); i++)
+  for (i = 1; i < (((u64) 1u) << lines); i++)
   {
     pad = false;
     memset (lb, '\0', LINE_LIMIT);  /* initialize the line buffer */
 
     for (j = 0; j < lines; j++)
     {
-      if (i & (1 << j))
+      if (i & (((u64) 1u) << j))
       {
         if (op_limit)
         {

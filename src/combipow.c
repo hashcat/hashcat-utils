@@ -15,15 +15,15 @@
  */
 
 typedef int bool;
+
 #define false 0
 #define true 1
 #define LINE_SIZE 64
 #define LINE_LIMIT 15 + 1 /* we add one to the limit for the null terminator */
 #define MAX_LINES 64 /* this is the limit of using a single unsigned 64-bit integer */
                      /* exceeding this count will cause the counters to wrap */
-char *progname;
 
-int usage()
+int usage (char *progname)
 {
   fprintf (stderr, "%s - utility to create \"unique combinations\" of given input\n", progname);
   fprintf (stderr, "\n");
@@ -52,7 +52,8 @@ int main (int argc, char *argv[])
   f1 = f2 = "\0";
   unsigned int i;
   int lines;
-  progname = argv[0];
+
+  char *progname = argv[0];
 
   for (i = 1; i < (unsigned int) argc; i++)
   {
@@ -60,7 +61,7 @@ int main (int argc, char *argv[])
     {
       if (!strcmp (argv[i],"-h"))
       {
-        return usage();
+        return usage (progname);
       }
       else if (!strcmp (argv[i],"-l"))
       {
@@ -77,13 +78,13 @@ int main (int argc, char *argv[])
     }
     else
     {
-      return usage();
+      return usage (progname);
     }
   }
 
   if (!strcmp (f1, "\0"))
   {
-    return usage();
+    return usage (progname);
   }
 
   FILE *fd1;
@@ -96,15 +97,17 @@ int main (int argc, char *argv[])
 
   lines = 0;
   char line[LINE_SIZE];
+
   while (fgets (line, LINE_SIZE, fd1))
   {
-    if (strlen(line) > LINE_LIMIT && op_limit)
+    if (strlen (line) > LINE_LIMIT && op_limit)
     {
-      fprintf(stderr, "Line length exceeded in input. Skipping...\n");
+      fprintf (stderr, "Line length exceeded in input. Skipping...\n");
       continue;
     }
     lines++;
   }
+
   rewind (fd1);
 
   /* we can't exceed the max line count. err if we do. */
@@ -124,6 +127,7 @@ int main (int argc, char *argv[])
   }
 
   i = 0;
+
   while (fgets (line, LINE_SIZE, fd1))
   {
     /* skip empty lines and remove them from line count */
@@ -133,7 +137,7 @@ int main (int argc, char *argv[])
       continue;
     }
     /* skip long lines */
-    if (strlen(line) > LINE_LIMIT && op_limit)
+    if (strlen (line) > LINE_LIMIT && op_limit)
     {
       continue;
     }
@@ -170,34 +174,40 @@ int main (int argc, char *argv[])
   for (i = 1; i < (unsigned int)(1 << lines); i++)
   {
     pad = false;
-    memset(lb, '\0', LINE_LIMIT); /* initialize the line buffer */
+    memset (lb, '\0', LINE_LIMIT); /* initialize the line buffer */
 
     for (j = 0; j < lines; j++)
     {
       if (i & (1 << j))
       {
-	if(op_limit)
-	{
-	  if ((strlen((char *)buf[j]) + strlen(lb) + pad_size) > (LINE_LIMIT-1))
-	  {
+        if (op_limit)
+        {
+          if ((strlen ((char *) buf[j]) + strlen (lb) + pad_size) > (LINE_LIMIT-1))
+          {
             fprintf (stderr, "Line length exceeded in output. Skipping...\n");
-	    continue;
-	  }
-          if (op_space && pad) strcat(lb, " ");
-	  strcat(lb, (char *)buf[j]);
-	} else {
+            continue;
+          }
+          if (op_space && pad) strcat (lb, " ");
+          strcat (lb, (char *)buf[j]);
+        }
+        else
+        {
           if (op_space && pad) printf (" ");
-          printf ("%s", (char *)buf[j]);
-	}
+
+          printf ("%s", (char *) buf[j]);
+        }
         pad = true;
       }
     }
+
     /* print buffer if not empty */
-    if(strlen(lb))
+
+    if (strlen (lb))
     {
       printf ("%s", lb);
     }
-    printf("\n");
+
+    printf ("\n");
   }
 
   return 0;

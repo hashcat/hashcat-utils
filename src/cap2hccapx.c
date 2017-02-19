@@ -389,6 +389,10 @@ static void db_essid_add (essid_t *essid, const u8 addr3[6])
     exit (-1);
   }
 
+  if (essid->essid_len == 0) return;
+
+  if (essid->essid[0] == 0) return;
+
   memcpy (essid->bssid, addr3, 6);
 
   lsearch (essid, essids, &essids_cnt, sizeof (essid_t), comp_bssid);

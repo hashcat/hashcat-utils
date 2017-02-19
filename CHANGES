@@ -1,3 +1,7 @@
+* v1.6 ->
+
+- Skip essid if it's length 0 or if first by is zero-byte (hidden network)
+
 * v1.5 -> v1.6
 
 - Added support to read prism header with cap2hccapx

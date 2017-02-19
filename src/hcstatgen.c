@@ -144,15 +144,24 @@ int main (int argc, char *argv[])
 
       for (line_pos = 0; line_pos < line_len - 1; line_pos += 1)
       {
-        uint8_t c0 = line_buf[line_pos + 0];
-        uint8_t c1 = line_buf[line_pos + 1];
+        int c0 = (int) line_buf[line_pos + 0];
+        int c1 = (int) line_buf[line_pos + 1];
+
+        if (c0 < 0) continue;
+        if (c0 >= CHARSIZ) continue;
+
+        if (c1 < 0) continue;
+        if (c1 >= CHARSIZ) continue;
 
         root_stats_buf_by_pos[line_pos][c0]++;
 
         markov_stats_buf_by_key[line_pos][c0][c1]++;
       }
 
-      uint8_t c0 = line_buf[line_pos + 0];
+      int c0 = (int) line_buf[line_pos + 0];
+
+      if (c0 < 0) continue;
+      if (c0 >= CHARSIZ) continue;
 
       root_stats_buf_by_pos[line_pos][c0]++;
     }

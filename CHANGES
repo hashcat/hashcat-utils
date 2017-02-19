@@ -1,3 +1,13 @@
+* v1.5 -> v1.6
+
+- Added support to read prism header with cap2hccapx
+- Fixed timestamp handling in cap2hccapx
+
+* v1.4 -> v1.5
+
+- Added support to read radiotap header with cap2hccapx
+- Fixed packet handling for cap2hccapx on windows
+
 * v1.3 -> v1.4
 
 - Add pragma to cap2hccapx.c to workaround broken packed handling on mingw

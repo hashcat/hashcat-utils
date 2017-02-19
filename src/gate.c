@@ -30,9 +30,16 @@ int main (int argc, char *argv[])
   _setmode (_fileno (stdin), _O_BINARY);
   #endif
 
-  int mod = atoi (argv[1]);
+  const int mod = atoi (argv[1]);
 
-  int offset = atoi (argv[2]);
+  if (mod < 1)
+  {
+    fprintf (stderr, "mod < 1\n");
+
+    return (-1);
+  }
+
+  const int offset = atoi (argv[2]);
 
   if (offset >= mod)
   {

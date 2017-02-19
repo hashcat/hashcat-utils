@@ -177,22 +177,6 @@ int main (int argc, char *argv[])
       continue;
     }
 
-    struct stat l0_stat;
-
-    if (stat (removefile, &l0_stat) == -1)
-    {
-      fprintf (stderr, "%s: %s", removefile, strerror (errno));
-
-      return (-1);
-    }
-
-    if (!S_ISREG (l0_stat.st_mode))
-    {
-      fprintf (stderr, "Skipping check against unregular file %s\n\n", removefile);
-
-      continue;
-    }
-
     printf ("Checking %s against cache\n", removefile);
 
     if ((fd = fopen (removefile, "rb")) == NULL)

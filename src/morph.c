@@ -120,9 +120,23 @@ int main (int argc, char *argv[])
   const int pos_min = atoi (argv[4]);
   const int pos_max = atoi (argv[5]);
 
-  if (width > 3)
+  if ((width < 1) || (width > 3))
   {
-    fprintf (stderr, "width > 3\n");
+    fprintf (stderr, "invalid width\n");
+
+    return (-1);
+  }
+
+  if ((pos_min < 1) || (pos_min > 15))
+  {
+    fprintf (stderr, "invalid pos_min\n");
+
+    return (-1);
+  }
+
+  if ((pos_max < 1) || (pos_max > 15))
+  {
+    fprintf (stderr, "invalid pos_max\n");
 
     return (-1);
   }

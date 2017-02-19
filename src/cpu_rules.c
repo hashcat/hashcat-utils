@@ -15,7 +15,7 @@ extern int max_len;
 #define SET_NAME(rule,val) (rule)->cmds[rule_cnt]  = ((val) & 0xff) <<  0
 #define SET_P0(rule,val)   INCR_POS; (rule)->cmds[rule_cnt] |= ((val) & 0xff) <<  8
 #define SET_P1(rule,val)   INCR_POS; (rule)->cmds[rule_cnt] |= ((val) & 0xff) << 16
-#define MAX_GPU_RULES      255
+#define MAX_GPU_RULES      31
 #define GET_NAME(rule)     rule_cmd = (((rule)->cmds[rule_cnt] >>  0) & 0xff)
 #define GET_P0(rule)       INCR_POS; rule_buf[rule_pos] = (((rule)->cmds[rule_cnt] >>  8) & 0xff)
 #define GET_P1(rule)       INCR_POS; rule_buf[rule_pos] = (((rule)->cmds[rule_cnt] >> 16) & 0xff)
@@ -1197,9 +1197,13 @@ char conv_itoc (char c)
   return (char) (-1);
 }
 
-uint get_random_num (uint min, uint max)
+uint get_random_num (const uint min, const uint max)
 {
   if (min == max) return (min);
+
+  const uint low = max - min;
+
+  if (low == 0) return (0);
 
   uint data;
 
@@ -1209,10 +1213,19 @@ uint get_random_num (uint min, uint max)
 
   if ((fread (&data, 1, sizeof (uint), fp)) != sizeof (uint))
   {
-    exit (1);
+    exit (-1);
   }
 
   fclose (fp);
 
-  return (uint) ((data % (max - min)) + min);
+  uint64_t r = data % low;
+
+  r += min;
+
+  if (r > 0xffffffff)
+  {
+    exit (-1);
+  }
+
+  return (uint) r;
 }

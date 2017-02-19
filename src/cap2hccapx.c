@@ -6,13 +6,13 @@
 #include <errno.h>
 #include <inttypes.h>
 
-#pragma pack(1)
-
 #if defined (_WIN32) || defined (_WIN64)
 typedef unsigned int lsearch_cnt_t;
 #else
 typedef size_t lsearch_cnt_t;
 #endif
+
+#pragma pack(1)
 
 /**
  * Name........: cap2hccapx.c
@@ -48,7 +48,8 @@ typedef uint64_t u64;
 #define DLT_RAW3        101
 
 #define DLT_IEEE802_11  105 /* IEEE 802.11 wireless */
-#define DLT_LINUX_SLL   113
+#define DLT_IEEE802_11_PRISM 119
+#define DLT_IEEE802_11_RADIO 127
 
 struct pcap_file_header {
   u32 magic;
@@ -61,8 +62,8 @@ struct pcap_file_header {
 };
 
 struct pcap_pkthdr {
-	u32 tv_sec;   /* timestamp seconds */
-	u32 tv_usec;  /* timestamp microseconds */
+  u32 tv_sec;   /* timestamp seconds */
+  u32 tv_usec;  /* timestamp microseconds */
   u32 caplen;   /* length of portion present */
   u32 len;      /* length this packet (off wire) */
 };
@@ -161,6 +162,55 @@ typedef struct ieee80211_llc_snap_header ieee80211_llc_snap_header_t;
 #define WPA_KEY_INFO_ERROR WBIT(10)
 #define WPA_KEY_INFO_REQUEST WBIT(11)
 #define WPA_KEY_INFO_ENCR_KEY_DATA WBIT(12) /* IEEE 802.11i/RSN only */
+
+// radiotap header from http://www.radiotap.org/
+
+struct ieee80211_radiotap_header
+{
+  u8  it_version;     /* set to 0 */
+  u8  it_pad;
+  u16 it_len;         /* entire length */
+  u32 it_present;     /* fields present */
+
+} __attribute__((packed));
+
+typedef struct ieee80211_radiotap_header ieee80211_radiotap_header_t;
+
+// prism header
+
+#define WLAN_DEVNAMELEN_MAX 16
+
+struct prism_item
+{
+  u32 did;
+  u16 status;
+  u16 len;
+  u32 data;
+
+} __attribute__((packed));
+
+struct prism_header
+{
+ u32 msgcode;
+ u32 msglen;
+
+ char devname[WLAN_DEVNAMELEN_MAX];
+
+ struct prism_item hosttime;
+ struct prism_item mactime;
+ struct prism_item channel;
+ struct prism_item rssi;
+ struct prism_item sq;
+ struct prism_item signal;
+ struct prism_item noise;
+ struct prism_item rate;
+ struct prism_item istx;
+ struct prism_item frmlen;
+
+} __attribute__((packed));
+
+typedef struct prism_item prism_item_t;
+typedef struct prism_header prism_header_t;
 
 // own structs
 
@@ -409,6 +459,8 @@ static int handle_auth (const auth_packet_t *auth_packet, const int pkt_offset, 
 
     if ((pkt_offset + excpkt->eapol_len) > pkt_size) return -1;
 
+    if ((sizeof (auth_packet_t) + ap_wpa_key_data_length) > sizeof (excpkt->eapol)) return -1;
+
     // we need to copy the auth_packet_t but have to clear the keymic
     auth_packet_t auth_packet_orig;
 
@@ -430,10 +482,6 @@ static int handle_auth (const auth_packet_t *auth_packet, const int pkt_offset, 
     excpkt->replay_counter--;
   }
   else if (excpkt_num == EXC_PKT_NUM_4)
-  {
-    return -1;
-  }
-  else
   {
     return -1;
   }
@@ -718,7 +766,9 @@ int main (int argc, char *argv[])
     pcap_file_header.linktype       = __builtin_bswap32 (pcap_file_header.linktype);
   }
 
-  if (pcap_file_header.linktype != DLT_IEEE802_11)
+  if ((pcap_file_header.linktype != DLT_IEEE802_11)
+   && (pcap_file_header.linktype != DLT_IEEE802_11_PRISM)
+   && (pcap_file_header.linktype != DLT_IEEE802_11_RADIO))
   {
     fprintf (stderr, "%s: Unsupported linktype detected\n", in);
 
@@ -761,7 +811,47 @@ int main (int argc, char *argv[])
       return -1;
     }
 
-    process_packet (packet, &header);
+    u8 *packet_ptr = packet;
+
+    if (pcap_file_header.linktype == DLT_IEEE802_11_PRISM)
+    {
+      if (header.caplen < sizeof (prism_header_t))
+      {
+        fprintf (stderr, "%s: Could not read prism header\n", in);
+
+        return -1;
+      }
+
+      prism_header_t *prism_header = (prism_header_t *) packet;
+
+      packet_ptr    += prism_header->msglen;
+      header.caplen -= prism_header->msglen;
+      header.len    -= prism_header->msglen;
+    }
+    else if (pcap_file_header.linktype == DLT_IEEE802_11_RADIO)
+    {
+      if (header.caplen < sizeof (ieee80211_radiotap_header_t))
+      {
+        fprintf (stderr, "%s: Could not read radiotap header\n", in);
+
+        return -1;
+      }
+
+      ieee80211_radiotap_header_t *ieee80211_radiotap_header = (ieee80211_radiotap_header_t *) packet;
+
+      if (ieee80211_radiotap_header->it_version != 0)
+      {
+        fprintf (stderr, "%s: Invalid radiotap header\n", in);
+
+        return -1;
+      }
+
+      packet_ptr    += ieee80211_radiotap_header->it_len;
+      header.caplen -= ieee80211_radiotap_header->it_len;
+      header.len    -= ieee80211_radiotap_header->it_len;
+    }
+
+    process_packet (packet_ptr, &header);
   }
 
   fclose (pcap);
@@ -825,10 +915,14 @@ int main (int argc, char *argv[])
 
         if (excpkt_ap->excpkt_num == EXC_PKT_NUM_1)
         {
+          if (excpkt_ap->tv_sec > excpkt_sta->tv_sec) continue;
+
           if ((excpkt_ap->tv_sec + EAPOL_TTL) < excpkt_sta->tv_sec) continue;
         }
         else
         {
+          if (excpkt_sta->tv_sec > excpkt_ap->tv_sec) continue;
+
           if ((excpkt_sta->tv_sec + EAPOL_TTL) < excpkt_ap->tv_sec) continue;
         }
 

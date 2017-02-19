@@ -618,8 +618,6 @@ static void process_packet (const u8 *packet, const pcap_pkthdr_t *header)
 
     if (rc_beacon == -1) return;
 
-    if (essid.essid_len == 0) return;
-
     // add the beacon to our database
 
     db_essid_add (&essid, ieee80211_hdr_3addr->addr3);

@@ -801,7 +801,7 @@ int main (int argc, char *argv[])
     {
       fprintf (stderr, "%s: Oversized packet detected\n", in);
 
-      return -1;
+      break;
     }
 
     const u32 nread2 = fread (&packet, sizeof (u8), header.caplen, pcap);
@@ -810,7 +810,7 @@ int main (int argc, char *argv[])
     {
       fprintf (stderr, "%s: Could not read pcap packet data\n", in);
 
-      return -1;
+      break;
     }
 
     u8 *packet_ptr = packet;
@@ -821,7 +821,7 @@ int main (int argc, char *argv[])
       {
         fprintf (stderr, "%s: Could not read prism header\n", in);
 
-        return -1;
+        break;
       }
 
       prism_header_t *prism_header = (prism_header_t *) packet;
@@ -836,7 +836,7 @@ int main (int argc, char *argv[])
       {
         fprintf (stderr, "%s: Could not read radiotap header\n", in);
 
-        return -1;
+        break;
       }
 
       ieee80211_radiotap_header_t *ieee80211_radiotap_header = (ieee80211_radiotap_header_t *) packet;
@@ -845,7 +845,7 @@ int main (int argc, char *argv[])
       {
         fprintf (stderr, "%s: Invalid radiotap header\n", in);
 
-        return -1;
+        break;
       }
 
       packet_ptr    += ieee80211_radiotap_header->it_len;

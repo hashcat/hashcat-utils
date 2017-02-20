@@ -1,6 +1,7 @@
 * v1.6 ->
 
 - Skip essid if it's length 0 or if first by is zero-byte (hidden network)
+- Allow reading broken .cap files even it has been cut short in the middle of a packet
 
 * v1.5 -> v1.6
 

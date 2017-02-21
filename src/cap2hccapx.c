@@ -246,10 +246,25 @@ typedef struct
 
 #define EAPOL_TTL 2
 
-#define EXC_PKT_NUM_1 1
-#define EXC_PKT_NUM_2 2
-#define EXC_PKT_NUM_3 3
-#define EXC_PKT_NUM_4 4
+typedef enum
+{
+  EXC_PKT_NUM_1 = 1,
+  EXC_PKT_NUM_2 = 2,
+  EXC_PKT_NUM_3 = 3,
+  EXC_PKT_NUM_4 = 4,
+
+} exc_pkt_num_t;
+
+typedef enum
+{
+  MESSAGE_PAIR_M12E2 = 0,
+  MESSAGE_PAIR_M14E4 = 1,
+  MESSAGE_PAIR_M32E2 = 2,
+  MESSAGE_PAIR_M32E3 = 3,
+  MESSAGE_PAIR_M34E3 = 4,
+  MESSAGE_PAIR_M34E4 = 5,
+
+} message_pair_t;
 
 #define BROADCAST_MAC "\xff\xff\xff\xff\xff\xff"
 
@@ -288,13 +303,14 @@ lsearch_cnt_t excpkts_cnt = 0;
 
 // output
 
+#define HCCAPX_VERSION   4
 #define HCCAPX_SIGNATURE 0x58504348 // HCPX
 
 struct hccapx
 {
   u32 signature;
   u32 version;
-  u8  authenticated;
+  u8  message_pair;
   u8  essid_len;
   u8  essid[32];
   u8  keyver;
@@ -445,49 +461,43 @@ static int handle_auth (const auth_packet_t *auth_packet, const int pkt_offset, 
     }
   }
 
-  // process packet based on handshake exchange number
+  // we're only interested in packets carrying a nonce
 
-  excpkt->excpkt_num = excpkt_num;
+  char zero[32] = { 0 };
+
+  if (memcmp (auth_packet->wpa_key_nonce, zero, 32) == 0) return -1;
+
+  // copy data
 
   memcpy (excpkt->nonce, auth_packet->wpa_key_nonce, 32);
 
   excpkt->replay_counter = ap_replay_counter;
 
-  if (excpkt_num == EXC_PKT_NUM_1)
+  excpkt->excpkt_num = excpkt_num;
+
+  excpkt->eapol_len = sizeof (auth_packet_t) + ap_wpa_key_data_length;
+
+  if ((pkt_offset + excpkt->eapol_len) > pkt_size) return -1;
+
+  if ((sizeof (auth_packet_t) + ap_wpa_key_data_length) > sizeof (excpkt->eapol)) return -1;
+
+  // we need to copy the auth_packet_t but have to clear the keymic
+  auth_packet_t auth_packet_orig;
+
+  memcpy (&auth_packet_orig, auth_packet, sizeof (auth_packet_t));
+
+  memset (auth_packet_orig.wpa_key_mic, 0, 16);
+
+  memcpy (excpkt->eapol, &auth_packet_orig, sizeof (auth_packet_t));
+  memcpy (excpkt->eapol + sizeof (auth_packet_t), auth_packet + 1, ap_wpa_key_data_length);
+
+  memcpy (excpkt->keymic, auth_packet->wpa_key_mic, 16);
+
+  excpkt->keyver = ap_key_information & WPA_KEY_INFO_TYPE_MASK;
+
+  if ((excpkt_num == EXC_PKT_NUM_3) || (excpkt_num == EXC_PKT_NUM_4))
   {
-    // nothing to do
-  }
-  else if (excpkt_num == EXC_PKT_NUM_2)
-  {
-    excpkt->eapol_len = sizeof (auth_packet_t) + ap_wpa_key_data_length;
-
-    if ((pkt_offset + excpkt->eapol_len) > pkt_size) return -1;
-
-    if ((sizeof (auth_packet_t) + ap_wpa_key_data_length) > sizeof (excpkt->eapol)) return -1;
-
-    // we need to copy the auth_packet_t but have to clear the keymic
-    auth_packet_t auth_packet_orig;
-
-    memcpy (&auth_packet_orig, auth_packet, sizeof (auth_packet_t));
-
-    memset (auth_packet_orig.wpa_key_mic, 0, 16);
-
-    memcpy (excpkt->eapol, &auth_packet_orig, sizeof (auth_packet_t));
-    memcpy (excpkt->eapol + sizeof (auth_packet_t), auth_packet + 1, ap_wpa_key_data_length);
-
-    memcpy (excpkt->keymic, auth_packet->wpa_key_mic, 16);
-
-    excpkt->keyver = ap_key_information & WPA_KEY_INFO_TYPE_MASK;
-  }
-  else if (excpkt_num == EXC_PKT_NUM_3)
-  {
-    // reduce by one
-
     excpkt->replay_counter--;
-  }
-  else if (excpkt_num == EXC_PKT_NUM_4)
-  {
-    return -1;
   }
 
   return 0;
@@ -676,7 +686,7 @@ static void process_packet (const u8 *packet, const pcap_pkthdr_t *header)
     {
       db_excpkt_add (&excpkt, header->tv_sec, header->tv_usec, ieee80211_hdr_3addr->addr2, ieee80211_hdr_3addr->addr1);
     }
-    else if (excpkt.excpkt_num == EXC_PKT_NUM_2)
+    else if ((excpkt.excpkt_num == EXC_PKT_NUM_2) || (excpkt.excpkt_num == EXC_PKT_NUM_4))
     {
       db_excpkt_add (&excpkt, header->tv_sec, header->tv_usec, ieee80211_hdr_3addr->addr1, ieee80211_hdr_3addr->addr2);
     }
@@ -908,14 +918,14 @@ int main (int argc, char *argv[])
       {
         const excpkt_t *excpkt_sta = excpkts + excpkt_sta_pos;
 
-        if (excpkt_sta->excpkt_num != EXC_PKT_NUM_2) continue;
+        if ((excpkt_sta->excpkt_num != EXC_PKT_NUM_2) && (excpkt_sta->excpkt_num != EXC_PKT_NUM_4)) continue;
 
         if (memcmp (excpkt_ap->mac_ap,  excpkt_sta->mac_ap,  6) != 0) continue;
         if (memcmp (excpkt_ap->mac_sta, excpkt_sta->mac_sta, 6) != 0) continue;
 
         if (excpkt_ap->replay_counter != excpkt_sta->replay_counter) continue;
 
-        if (excpkt_ap->excpkt_num == EXC_PKT_NUM_1)
+        if (excpkt_ap->excpkt_num < excpkt_sta->excpkt_num)
         {
           if (excpkt_ap->tv_sec > excpkt_sta->tv_sec) continue;
 
@@ -928,16 +938,73 @@ int main (int argc, char *argv[])
           if ((excpkt_sta->tv_sec + EAPOL_TTL) < excpkt_ap->tv_sec) continue;
         }
 
-        const u8 authenticated = (excpkt_ap->excpkt_num == EXC_PKT_NUM_3);
+        u8 message_pair = 255;
 
-        printf (" --> STA=%02x:%02x:%02x:%02x:%02x:%02x, Authenticated=%u, Replay Counter=%" PRIu64 "\n",
+        if ((excpkt_ap->excpkt_num == EXC_PKT_NUM_1) && (excpkt_sta->excpkt_num == EXC_PKT_NUM_2))
+        {
+          if (excpkt_sta->eapol_len > 0)
+          {
+            message_pair = MESSAGE_PAIR_M12E2;
+          }
+          else
+          {
+            continue;
+          }
+        }
+        else if ((excpkt_ap->excpkt_num == EXC_PKT_NUM_1) && (excpkt_sta->excpkt_num == EXC_PKT_NUM_4))
+        {
+          if (excpkt_sta->eapol_len > 0)
+          {
+            message_pair = MESSAGE_PAIR_M14E4;
+          }
+          else
+          {
+            continue;
+          }
+        }
+        else if ((excpkt_ap->excpkt_num == EXC_PKT_NUM_3) && (excpkt_sta->excpkt_num == EXC_PKT_NUM_2))
+        {
+          if (excpkt_sta->eapol_len > 0)
+          {
+            message_pair = MESSAGE_PAIR_M32E2;
+          }
+          else if (excpkt_ap->eapol_len > 0)
+          {
+            message_pair = MESSAGE_PAIR_M32E3;
+          }
+          else
+          {
+            continue;
+          }
+        }
+        else if ((excpkt_ap->excpkt_num == EXC_PKT_NUM_3) && (excpkt_sta->excpkt_num == EXC_PKT_NUM_4))
+        {
+          if (excpkt_ap->eapol_len > 0)
+          {
+            message_pair = MESSAGE_PAIR_M34E3;
+          }
+          else if (excpkt_sta->eapol_len > 0)
+          {
+            message_pair = MESSAGE_PAIR_M34E4;
+          }
+          else
+          {
+            continue;
+          }
+        }
+        else
+        {
+          fprintf (stderr, "BUG!!! AP:%d STA:%d\n", excpkt_ap->excpkt_num, excpkt_sta->excpkt_num);
+        }
+
+        printf (" --> STA=%02x:%02x:%02x:%02x:%02x:%02x, Message Pair=%u, Replay Counter=%" PRIu64 "\n",
           excpkt_sta->mac_sta[0],
           excpkt_sta->mac_sta[1],
           excpkt_sta->mac_sta[2],
           excpkt_sta->mac_sta[3],
           excpkt_sta->mac_sta[4],
           excpkt_sta->mac_sta[5],
-          authenticated,
+          message_pair,
           excpkt_sta->replay_counter);
 
         // finally, write hccapx
@@ -945,15 +1012,12 @@ int main (int argc, char *argv[])
         hccapx_t hccapx;
 
         hccapx.signature = HCCAPX_SIGNATURE;
-        hccapx.version = 3;
+        hccapx.version   = HCCAPX_VERSION;
 
-        hccapx.authenticated = authenticated;
+        hccapx.message_pair = message_pair;
 
         hccapx.essid_len = essid->essid_len;
         memcpy (&hccapx.essid, essid->essid, 32);
-
-        hccapx.keyver = excpkt_sta->keyver;
-        memcpy (&hccapx.keymic, excpkt_sta->keymic, 16);
 
         memcpy (&hccapx.mac_ap, excpkt_ap->mac_ap, 6);
         memcpy (&hccapx.nonce_ap, excpkt_ap->nonce, 32);
@@ -961,8 +1025,22 @@ int main (int argc, char *argv[])
         memcpy (&hccapx.mac_sta, excpkt_sta->mac_sta, 6);
         memcpy (&hccapx.nonce_sta, excpkt_sta->nonce, 32);
 
-        hccapx.eapol_len = excpkt_sta->eapol_len;
-        memcpy (&hccapx.eapol, excpkt_sta->eapol, 256);
+        if (excpkt_sta->eapol_len > 0)
+        {
+          hccapx.keyver = excpkt_sta->keyver;
+          memcpy (&hccapx.keymic, excpkt_sta->keymic, 16);
+
+          hccapx.eapol_len = excpkt_sta->eapol_len;
+          memcpy (&hccapx.eapol, excpkt_sta->eapol, 256);
+        }
+        else
+        {
+          hccapx.keyver = excpkt_ap->keyver;
+          memcpy (&hccapx.keymic, excpkt_ap->keymic, 16);
+
+          hccapx.eapol_len = excpkt_ap->eapol_len;
+          memcpy (&hccapx.eapol, excpkt_ap->eapol, 256);
+        }
 
         fwrite (&hccapx, sizeof (hccapx_t), 1, fp);
 

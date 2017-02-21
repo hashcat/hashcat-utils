@@ -2,6 +2,8 @@
 
 - Skip essid if it's length 0 or if first by is zero-byte (hidden network)
 - Allow reading broken .cap files even it has been cut short in the middle of a packet
+- Allow Message-Pair 1+2, 1+4, 2+3 and 3+4 in cap2hccapx.c
+- Update cap2hccapx format to version 4
 
 * v1.5 -> v1.6
 

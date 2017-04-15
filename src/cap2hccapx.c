@@ -6,6 +6,10 @@
 #include <errno.h>
 #include <inttypes.h>
 
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+#error "compiling for big-endian architecture not supported"
+#endif
+
 #if defined (_WIN32) || defined (_WIN64)
 typedef unsigned int lsearch_cnt_t;
 #else

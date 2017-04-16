@@ -7,7 +7,7 @@
 #include <inttypes.h>
 
 #if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-#error "compiling for big-endian architecture not supported"
+#define BIG_ENDIAN_HOST
 #endif
 
 #if defined (_WIN32) || defined (_WIN64)
@@ -431,10 +431,10 @@ static int handle_llc (const ieee80211_llc_snap_header_t *ieee80211_llc_snap_hea
 
 static int handle_auth (const auth_packet_t *auth_packet, const int pkt_offset, const int pkt_size, excpkt_t *excpkt)
 {
-  const u16 ap_key_information      = __builtin_bswap16 (auth_packet->key_information);
   const u16 ap_length               = __builtin_bswap16 (auth_packet->length);
-  const u16 ap_wpa_key_data_length  = __builtin_bswap16 (auth_packet->wpa_key_data_length);
+  const u16 ap_key_information      = __builtin_bswap16 (auth_packet->key_information);
   const u64 ap_replay_counter       = __builtin_bswap64 (auth_packet->replay_counter);
+  const u16 ap_wpa_key_data_length  = __builtin_bswap16 (auth_packet->wpa_key_data_length);
 
   if (ap_length == 0) return -1;
 
@@ -489,6 +489,14 @@ static int handle_auth (const auth_packet_t *auth_packet, const int pkt_offset, 
   auth_packet_t auth_packet_orig;
 
   memcpy (&auth_packet_orig, auth_packet, sizeof (auth_packet_t));
+
+  #ifdef BIG_ENDIAN_HOST
+  auth_packet_orig.length              = __builtin_bswap16 (auth_packet_orig.length);
+  auth_packet_orig.key_information     = __builtin_bswap16 (auth_packet_orig.key_information);
+  auth_packet_orig.key_length          = __builtin_bswap16 (auth_packet_orig.key_length);
+  auth_packet_orig.replay_counter      = __builtin_bswap64 (auth_packet_orig.replay_counter);
+  auth_packet_orig.wpa_key_data_length = __builtin_bswap16 (auth_packet_orig.wpa_key_data_length);
+  #endif
 
   memset (auth_packet_orig.wpa_key_mic, 0, 16);
 
@@ -603,6 +611,12 @@ static void process_packet (const u8 *packet, const pcap_pkthdr_t *header)
 
   ieee80211_hdr_3addr_t *ieee80211_hdr_3addr = (ieee80211_hdr_3addr_t *) packet;
 
+  #ifdef BIG_ENDIAN_HOST
+  ieee80211_hdr_3addr->frame_control = __builtin_bswap16 (ieee80211_hdr_3addr->frame_control);
+  ieee80211_hdr_3addr->duration_id   = __builtin_bswap16 (ieee80211_hdr_3addr->duration_id);
+  ieee80211_hdr_3addr->seq_ctrl      = __builtin_bswap16 (ieee80211_hdr_3addr->seq_ctrl);
+  #endif
+
   const u16 frame_control = ieee80211_hdr_3addr->frame_control;
 
   if ((frame_control & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_MGMT)
@@ -664,7 +678,11 @@ static void process_packet (const u8 *packet, const pcap_pkthdr_t *header)
 
     if (header->caplen < (llc_offset + sizeof (ieee80211_llc_snap_header_t))) return;
 
-    const ieee80211_llc_snap_header_t *ieee80211_llc_snap_header = (ieee80211_llc_snap_header_t *) &packet[llc_offset];
+    ieee80211_llc_snap_header_t *ieee80211_llc_snap_header = (ieee80211_llc_snap_header_t *) &packet[llc_offset];
+
+    #ifdef BIG_ENDIAN_HOST
+    ieee80211_llc_snap_header->ethertype = __builtin_bswap16 (ieee80211_llc_snap_header->ethertype);
+    #endif
 
     const int rc_llc = handle_llc (ieee80211_llc_snap_header);
 
@@ -676,7 +694,15 @@ static void process_packet (const u8 *packet, const pcap_pkthdr_t *header)
 
     if (header->caplen < (auth_offset + sizeof (auth_packet_t))) return;
 
-    const auth_packet_t *auth_packet = (auth_packet_t *) &packet[auth_offset];
+    auth_packet_t *auth_packet = (auth_packet_t *) &packet[auth_offset];
+
+    #ifdef BIG_ENDIAN_HOST
+    auth_packet->length              = __builtin_bswap16 (auth_packet->length);
+    auth_packet->key_information     = __builtin_bswap16 (auth_packet->key_information);
+    auth_packet->key_length          = __builtin_bswap16 (auth_packet->key_length);
+    auth_packet->replay_counter      = __builtin_bswap64 (auth_packet->replay_counter);
+    auth_packet->wpa_key_data_length = __builtin_bswap16 (auth_packet->wpa_key_data_length);
+    #endif
 
     excpkt_t excpkt;
 
@@ -754,6 +780,16 @@ int main (int argc, char *argv[])
     return -1;
   }
 
+  #ifdef BIG_ENDIAN_HOST
+  pcap_file_header.magic          = __builtin_bswap32 (pcap_file_header.magic);
+  pcap_file_header.version_major  = __builtin_bswap16 (pcap_file_header.version_major);
+  pcap_file_header.version_minor  = __builtin_bswap16 (pcap_file_header.version_minor);
+  pcap_file_header.thiszone       = __builtin_bswap32 (pcap_file_header.thiszone);
+  pcap_file_header.sigfigs        = __builtin_bswap32 (pcap_file_header.sigfigs);
+  pcap_file_header.snaplen        = __builtin_bswap32 (pcap_file_header.snaplen);
+  pcap_file_header.linktype       = __builtin_bswap32 (pcap_file_header.linktype);
+  #endif
+
   int bitness = 0;
 
   if (pcap_file_header.magic == TCPDUMP_MAGIC)
@@ -801,6 +837,13 @@ int main (int argc, char *argv[])
 
     if (nread1 != 1) continue;
 
+    #ifdef BIG_ENDIAN_HOST
+    header.tv_sec   = __builtin_bswap32 (header.tv_sec);
+    header.tv_usec  = __builtin_bswap32 (header.tv_usec);
+    header.caplen   = __builtin_bswap32 (header.caplen);
+    header.len      = __builtin_bswap32 (header.len);
+    #endif
+
     if (bitness == 1)
     {
       header.tv_sec   = __builtin_bswap32 (header.tv_sec);
@@ -840,6 +883,11 @@ int main (int argc, char *argv[])
 
       prism_header_t *prism_header = (prism_header_t *) packet;
 
+      #ifdef BIG_ENDIAN_HOST
+      prism_header->msgcode = __builtin_bswap32 (prism_header->msgcode);
+      prism_header->msglen  = __builtin_bswap32 (prism_header->msglen);
+      #endif
+
       packet_ptr    += prism_header->msglen;
       header.caplen -= prism_header->msglen;
       header.len    -= prism_header->msglen;
@@ -854,6 +902,11 @@ int main (int argc, char *argv[])
       }
 
       ieee80211_radiotap_header_t *ieee80211_radiotap_header = (ieee80211_radiotap_header_t *) packet;
+
+      #ifdef BIG_ENDIAN_HOST
+      ieee80211_radiotap_header->it_len     = __builtin_bswap16 (ieee80211_radiotap_header->it_len);
+      ieee80211_radiotap_header->it_present = __builtin_bswap32 (ieee80211_radiotap_header->it_present);
+      #endif
 
       if (ieee80211_radiotap_header->it_version != 0)
       {
@@ -1015,6 +1068,8 @@ int main (int argc, char *argv[])
 
         hccapx_t hccapx;
 
+        memset (&hccapx, 0, sizeof (hccapx));
+
         hccapx.signature = HCCAPX_SIGNATURE;
         hccapx.version   = HCCAPX_VERSION;
 
@@ -1045,6 +1100,12 @@ int main (int argc, char *argv[])
           hccapx.eapol_len = excpkt_ap->eapol_len;
           memcpy (&hccapx.eapol, excpkt_ap->eapol, 256);
         }
+
+        #ifdef BIG_ENDIAN_HOST
+        hccapx.signature  = __builtin_bswap32 (hccapx.signature);
+        hccapx.version    = __builtin_bswap32 (hccapx.version);
+        hccapx.eapol_len  = __builtin_bswap16 (hccapx.eapol_len);
+        #endif
 
         fwrite (&hccapx, sizeof (hccapx_t), 1, fp);
 

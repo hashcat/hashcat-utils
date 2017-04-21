@@ -249,6 +249,7 @@ typedef struct
 } essid_t;
 
 #define EAPOL_TTL 1
+#define TEST_REPLAYCOUNT 0
 
 typedef enum
 {
@@ -989,7 +990,9 @@ int main (int argc, char *argv[])
         if (memcmp (excpkt_ap->mac_ap,  excpkt_sta->mac_ap,  6) != 0) continue;
         if (memcmp (excpkt_ap->mac_sta, excpkt_sta->mac_sta, 6) != 0) continue;
 
+        #if TEST_REPLAYCOUNT == 1
         if (excpkt_ap->replay_counter != excpkt_sta->replay_counter) continue;
+        #endif
 
         if (excpkt_ap->excpkt_num < excpkt_sta->excpkt_num)
         {

@@ -248,7 +248,7 @@ typedef struct
 
 } essid_t;
 
-#define EAPOL_TTL 2
+#define EAPOL_TTL 1
 
 typedef enum
 {

@@ -852,6 +852,15 @@ int main (int argc, char *argv[])
       header.len      = __builtin_bswap32 (header.len);
     }
 
+    if ((header.tv_sec == 0) && (header.tv_usec == 0))
+    {
+      fprintf (stderr, "Zero value timestamps detected in file: %s.\n", in);
+      fprintf (stderr, "This prevents correct EAPOL-Key timeout calculation.\n");
+      fprintf (stderr, "Do not use preprocess the capture file with tools such as wpaclean.\n");
+
+      return -1;
+    }
+
     u8 packet[TCPDUMP_DECODE_LEN];
 
     if (header.caplen >= TCPDUMP_DECODE_LEN)

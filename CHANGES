@@ -1,4 +1,10 @@
-* v1.6 ->
+* v1.7 ->
+
+- Fix radiotap header parsing in cap2hccapx.c
+- Check for zero timestamp and abort if detected in cap2hccapx.c
+- Decrease EAPOL timeout from 2 to 1 in cap2hccapx.c
+
+* v1.6 -> v1.7
 
 - Skip essid if it's length 0 or if first by is zero-byte (hidden network)
 - Allow reading broken .cap files even it has been cut short in the middle of a packet

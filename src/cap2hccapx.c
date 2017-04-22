@@ -1087,6 +1087,10 @@ int main (int argc, char *argv[])
 
         hccapx.message_pair = message_pair;
 
+        #if TEST_REPLAYCOUNT == 1
+        hccapx.message_pair |= 0x80;
+        #endif
+
         hccapx.essid_len = essid->essid_len;
         memcpy (&hccapx.essid, essid->essid, 32);
 

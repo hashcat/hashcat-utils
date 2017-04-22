@@ -4,6 +4,7 @@
 - Check for zero timestamp and abort if detected in cap2hccapx.c
 - Decrease EAPOL timeout from 2 to 1 in cap2hccapx.c
 - Disable check for matching replay count in cap2hccap.c (can be reenabled by setting TEST_REPLAYCOUNT to 1)
+- Set 0x80 to hccapx.message_pair in case TEST_REPLAYCOUNT is set to 1 in cap2hccapx.c
 
 * v1.6 -> v1.7
 

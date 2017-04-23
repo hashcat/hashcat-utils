@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <search.h>
 #include <errno.h>
 #include <inttypes.h>
@@ -990,9 +991,7 @@ int main (int argc, char *argv[])
         if (memcmp (excpkt_ap->mac_ap,  excpkt_sta->mac_ap,  6) != 0) continue;
         if (memcmp (excpkt_ap->mac_sta, excpkt_sta->mac_sta, 6) != 0) continue;
 
-        #if TEST_REPLAYCOUNT == 1
-        if (excpkt_ap->replay_counter != excpkt_sta->replay_counter) continue;
-        #endif
+        const bool valid_replay_counter = (excpkt_ap->replay_counter == excpkt_sta->replay_counter) ? true : false;
 
         if (excpkt_ap->excpkt_num < excpkt_sta->excpkt_num)
         {
@@ -1087,9 +1086,10 @@ int main (int argc, char *argv[])
 
         hccapx.message_pair = message_pair;
 
-        #if TEST_REPLAYCOUNT == 1
-        hccapx.message_pair |= 0x80;
-        #endif
+        if (valid_replay_counter == false)
+        {
+          hccapx.message_pair |= 0x80;
+        }
 
         hccapx.essid_len = essid->essid_len;
         memcpy (&hccapx.essid, essid->essid, 32);

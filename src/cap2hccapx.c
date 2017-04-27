@@ -298,7 +298,7 @@ typedef struct
 
 // databases
 
-#define DB_ESSID_MAX  1000
+#define DB_ESSID_MAX  50000
 #define DB_EXCPKT_MAX 100000
 
 essid_t      *essids = NULL;

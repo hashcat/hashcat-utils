@@ -126,10 +126,19 @@ typedef struct ieee80211_llc_snap_header ieee80211_llc_snap_header_t;
 #define IEEE80211_FTYPE_MGMT        0x0000
 #define IEEE80211_FTYPE_DATA        0x0008
 
-#define IEEE80211_STYPE_PROBE_REQ   0x0040
-#define IEEE80211_STYPE_PROBE_RESP  0x0050
-#define IEEE80211_STYPE_BEACON      0x0080
-#define IEEE80211_STYPE_QOS_DATA    0x0080
+#define IEEE80211_STYPE_ASSOC_REQ     0x0000
+#define IEEE80211_STYPE_ASSOC_RESP    0x0010
+#define IEEE80211_STYPE_REASSOC_REQ   0x0020
+#define IEEE80211_STYPE_REASSOC_RESP  0x0030
+#define IEEE80211_STYPE_PROBE_REQ     0x0040
+#define IEEE80211_STYPE_PROBE_RESP    0x0050
+#define IEEE80211_STYPE_BEACON        0x0080
+#define IEEE80211_STYPE_QOS_DATA      0x0080
+#define IEEE80211_STYPE_ATIM          0x0090
+#define IEEE80211_STYPE_DISASSOC      0x00A0
+#define IEEE80211_STYPE_AUTH          0x00B0
+#define IEEE80211_STYPE_DEAUTH        0x00C0
+#define IEEE80211_STYPE_ACTION        0x00D0
 
 #define IEEE80211_LLC_DSAP              0xAA
 #define IEEE80211_LLC_SSAP              0xAA
@@ -221,30 +230,59 @@ typedef struct prism_header prism_header_t;
 /* CACE PPI headers */
 struct ppi_packet_header
 {
-	uint8_t pph_version;
-	uint8_t pph_flags;
-	uint16_t pph_len;
-	uint32_t pph_dlt;
+  uint8_t pph_version;
+  uint8_t pph_flags;
+  uint16_t pph_len;
+  uint32_t pph_dlt;
 } __attribute__((packed));
 
 typedef struct ppi_packet_header ppi_packet_header_t;
 
 struct ppi_field_header
 {
-	uint16_t pfh_datatype;
-	uint16_t pfh_datalen;
+  uint16_t pfh_datatype;
+  uint16_t pfh_datalen;
 } __attribute__((__packed__));
 
 typedef struct ppi_field_header ppi_field_header_t;
 
-#define PPI_FIELD_11COMMON		2
-#define PPI_FIELD_11NMAC		3
-#define PPI_FIELD_11NMACPHY		4
-#define PPI_FIELD_SPECMAP		5
-#define PPI_FIELD_PROCINFO		6
-#define PPI_FIELD_CAPINFO		7
+#define PPI_FIELD_11COMMON    2
+#define PPI_FIELD_11NMAC      3
+#define PPI_FIELD_11NMACPHY   4
+#define PPI_FIELD_SPECMAP     5
+#define PPI_FIELD_PROCINFO    6
+#define PPI_FIELD_CAPINFO     7
 
 // own structs
+
+struct beaconinfo
+{
+ u64 beacon_timestamp;
+ u16 beacon_interval;
+ u16 beacon_capabilities;
+
+} __attribute__((packed));
+
+typedef struct beaconinfo beacon_t;
+
+struct associationreqf
+{
+ u16 client_capabilities;
+ u16 client_listeninterval;
+
+} __attribute__((packed));
+
+typedef struct associationreqf assocreq_t;
+
+struct reassociationreqf
+{
+ u16 client_capabilities;
+ u16 client_listeninterval;
+ u8  addr[6];
+
+} __attribute__((packed));
+
+typedef struct reassociationreqf reassocreq_t;
 
 struct auth_packet
 {
@@ -268,11 +306,23 @@ typedef struct auth_packet auth_packet_t;
 
 #define MAX_ESSID_LEN 32
 
+typedef enum
+{
+  ESSID_SOURCE_USER           = 1,
+  ESSID_SOURCE_REASSOC        = 2,
+  ESSID_SOURCE_ASSOC          = 3,
+  ESSID_SOURCE_PROBE          = 4,
+  ESSID_SOURCE_DIRECTED_PROBE = 5,
+  ESSID_SOURCE_BEACON         = 6,
+
+} essid_source_t;
+
 typedef struct
 {
   u8   bssid[6];
   char essid[MAX_ESSID_LEN + 4];
   int  essid_len;
+  int  essid_source;
 
 } essid_t;
 
@@ -455,7 +505,7 @@ static void db_excpkt_add (excpkt_t *excpkt, const u32 tv_sec, const u32 tv_usec
   lsearch (excpkt, excpkts, &excpkts_cnt, sizeof (excpkt_t), comp_excpkt);
 }
 
-static void db_essid_add (essid_t *essid, const u8 addr3[6])
+static void db_essid_add (essid_t *essid, const u8 addr3[6], const int essid_source)
 {
   if (essids_cnt == DB_ESSID_MAX)
   {
@@ -470,7 +520,25 @@ static void db_essid_add (essid_t *essid, const u8 addr3[6])
 
   memcpy (essid->bssid, addr3, 6);
 
-  lsearch (essid, essids, &essids_cnt, sizeof (essid_t), comp_bssid);
+  void *ptr = lfind (essid, essids, &essids_cnt, sizeof (essid_t), comp_bssid);
+
+  if (ptr == NULL)
+  {
+    essid->essid_source = essid_source;
+
+    lsearch (essid, essids, &essids_cnt, sizeof (essid_t), comp_bssid);
+  }
+  else
+  {
+    essid_t *essid_old = (essid_t *) ptr;
+
+    if (essid_source < essid_old->essid_source)
+    {
+      memcpy (essid_old, essid, sizeof (essid_t));
+
+      essid_old->essid_source = essid_source;
+    }
+  }
 }
 
 static int handle_llc (const ieee80211_llc_snap_header_t *ieee80211_llc_snap_header)
@@ -570,12 +638,8 @@ static int handle_auth (const auth_packet_t *auth_packet, const int pkt_offset, 
   return 0;
 }
 
-static int get_essid_from_user (char *s)
+static int get_essid_from_user (char *s, essid_t *essid)
 {
-  essid_t essid;
-
-  memset (&essid, 0, sizeof (essid_t));
-
   char *man_essid = s;
   char *man_bssid = strchr (man_essid, ':');
 
@@ -604,23 +668,25 @@ static int get_essid_from_user (char *s)
     return -1;
   }
 
-  strncpy (essid.essid, man_essid, 32);
+  strncpy (essid->essid, man_essid, 32);
 
-  essid.essid_len = strlen (essid.essid);
+  essid->essid_len = strlen (essid->essid);
 
-  essid.bssid[0] = hex_to_u8 ((u8 *) man_bssid); man_bssid += 2;
-  essid.bssid[1] = hex_to_u8 ((u8 *) man_bssid); man_bssid += 2;
-  essid.bssid[2] = hex_to_u8 ((u8 *) man_bssid); man_bssid += 2;
-  essid.bssid[3] = hex_to_u8 ((u8 *) man_bssid); man_bssid += 2;
-  essid.bssid[4] = hex_to_u8 ((u8 *) man_bssid); man_bssid += 2;
-  essid.bssid[5] = hex_to_u8 ((u8 *) man_bssid); man_bssid += 2;
+  u8 bssid[6];
 
-  lsearch (&essid, essids, &essids_cnt, sizeof (essid_t), comp_bssid);
+  bssid[0] = hex_to_u8 ((u8 *) man_bssid); man_bssid += 2;
+  bssid[1] = hex_to_u8 ((u8 *) man_bssid); man_bssid += 2;
+  bssid[2] = hex_to_u8 ((u8 *) man_bssid); man_bssid += 2;
+  bssid[3] = hex_to_u8 ((u8 *) man_bssid); man_bssid += 2;
+  bssid[4] = hex_to_u8 ((u8 *) man_bssid); man_bssid += 2;
+  bssid[5] = hex_to_u8 ((u8 *) man_bssid); man_bssid += 2;
+
+  db_essid_add (essid, bssid, ESSID_SOURCE_USER);
 
   return 0;
 }
 
-static int get_essid_from_beacon (const u8 *packet, const pcap_pkthdr_t *header, u32 length_skip, essid_t *essid)
+static int get_essid_from_tag (const u8 *packet, const pcap_pkthdr_t *header, u32 length_skip, essid_t *essid)
 {
   if (length_skip > header->caplen) return -1;
 
@@ -682,28 +748,58 @@ static void process_packet (const u8 *packet, const pcap_pkthdr_t *header)
 
     memset (&essid, 0, sizeof (essid_t));
 
-    int rc_beacon = -1;
-
     const int stype = frame_control & IEEE80211_FCTL_STYPE;
 
-    if ((stype == IEEE80211_STYPE_BEACON) || (stype == IEEE80211_STYPE_PROBE_RESP))
+    if (stype == IEEE80211_STYPE_BEACON)
     {
-      u32 length_skip = sizeof (ieee80211_hdr_3addr_t) + sizeof (u64) + sizeof (u16) + sizeof (u16);
+      const u32 length_skip = sizeof (ieee80211_hdr_3addr_t) + sizeof (beacon_t);
 
-      rc_beacon = get_essid_from_beacon (packet, header, length_skip, &essid);
+      const int rc_beacon = get_essid_from_tag (packet, header, length_skip, &essid);
+
+      if (rc_beacon == -1) return;
+
+      db_essid_add (&essid, ieee80211_hdr_3addr->addr3, ESSID_SOURCE_BEACON);
     }
     else if (stype == IEEE80211_STYPE_PROBE_REQ)
     {
-      u32 length_skip = sizeof (ieee80211_hdr_3addr_t);
+      const u32 length_skip = sizeof (ieee80211_hdr_3addr_t);
 
-      rc_beacon = get_essid_from_beacon (packet, header, length_skip, &essid);
+      const int rc_beacon = get_essid_from_tag (packet, header, length_skip, &essid);
+
+      if (rc_beacon == -1) return;
+
+      db_essid_add (&essid, ieee80211_hdr_3addr->addr3, ESSID_SOURCE_PROBE);
     }
+    else if (stype == IEEE80211_STYPE_PROBE_RESP)
+    {
+      const u32 length_skip = sizeof (ieee80211_hdr_3addr_t) + sizeof (beacon_t);
 
-    if (rc_beacon == -1) return;
+      const int rc_beacon = get_essid_from_tag (packet, header, length_skip, &essid);
 
-    // add the beacon to our database
+      if (rc_beacon == -1) return;
 
-    db_essid_add (&essid, ieee80211_hdr_3addr->addr3);
+      db_essid_add (&essid, ieee80211_hdr_3addr->addr3, ESSID_SOURCE_PROBE);
+    }
+    else if (stype == IEEE80211_STYPE_ASSOC_REQ)
+    {
+      const u32 length_skip = sizeof (ieee80211_hdr_3addr_t) + sizeof (assocreq_t);
+
+      const int rc_beacon = get_essid_from_tag (packet, header, length_skip, &essid);
+
+      if (rc_beacon == -1) return;
+
+      db_essid_add (&essid, ieee80211_hdr_3addr->addr3, ESSID_SOURCE_ASSOC);
+    }
+    else if (stype == IEEE80211_STYPE_REASSOC_REQ)
+    {
+      const u32 length_skip = sizeof (ieee80211_hdr_3addr_t) + sizeof (reassocreq_t);
+
+      const int rc_beacon = get_essid_from_tag (packet, header, length_skip, &essid);
+
+      if (rc_beacon == -1) return;
+
+      db_essid_add (&essid, ieee80211_hdr_3addr->addr3, ESSID_SOURCE_REASSOC);
+    }
   }
   else if ((frame_control & IEEE80211_FCTL_FTYPE) == IEEE80211_FTYPE_DATA)
   {
@@ -806,7 +902,11 @@ int main (int argc, char *argv[])
 
   if (argc >= 5)
   {
-    const int rc = get_essid_from_user (argv[4]);
+    essid_t essid;
+
+    memset (&essid, 0, sizeof (essid_t));
+
+    const int rc = get_essid_from_user (argv[4], &essid);
 
     if (rc == -1) return -1;
   }
@@ -984,15 +1084,20 @@ int main (int argc, char *argv[])
       header.caplen -= ieee80211_radiotap_header->it_len;
       header.len    -= ieee80211_radiotap_header->it_len;
     }
-    else if (pcap_file_header.linktype == DLT_IEEE802_11_PPI_HDR) {
-	    ppi_packet_header_t *ppi_packet_header = (ppi_packet_header_t *) packet;
-	    unsigned short  len = ppi_packet_header->pph_len;
-	    packet_ptr += len;
-	    header.caplen -= len;
-	    header.len    -= len;
+    else if (pcap_file_header.linktype == DLT_IEEE802_11_PPI_HDR)
+    {
+      if (header.caplen < sizeof (ppi_packet_header_t))
+      {
+        fprintf (stderr, "%s: Could not read ppi header\n", in);
 
-	    //if( n <= 0 || n>= (int) pkh.caplen )
-	    //	    continue;
+        break;
+      }
+
+      ppi_packet_header_t *ppi_packet_header = (ppi_packet_header_t *) packet;
+
+      packet_ptr    += ppi_packet_header->pph_len;
+      header.caplen -= ppi_packet_header->pph_len;
+      header.len    -= ppi_packet_header->pph_len;
     }
 
     process_packet (packet_ptr, &header);

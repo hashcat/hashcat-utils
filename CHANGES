@@ -5,6 +5,9 @@
 - Decrease EAPOL timeout from 2 to 1 in cap2hccapx.c
 - Disable check for matching replay count in cap2hccap.c (can be reenabled by setting TEST_REPLAYCOUNT to 1)
 - Set 0x80 to hccapx.message_pair in case TEST_REPLAYCOUNT is set to 1 in cap2hccapx.c
+- Add support for ppi header in cap2hccapx.c
+- Add support for extracting essid from assoc and reassoc requests in cap2hccapx.c
+- Prioritized bssid-to-essid database in cap2hccapx.c, see #27
 
 * v1.6 -> v1.7
 

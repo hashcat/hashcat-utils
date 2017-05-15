@@ -55,6 +55,7 @@ typedef uint64_t u64;
 #define DLT_IEEE802_11  105 /* IEEE 802.11 wireless */
 #define DLT_IEEE802_11_PRISM 119
 #define DLT_IEEE802_11_RADIO 127
+#define DLT_IEEE802_11_PPI_HDR 192
 
 struct pcap_file_header {
   u32 magic;
@@ -216,6 +217,32 @@ struct prism_header
 
 typedef struct prism_item prism_item_t;
 typedef struct prism_header prism_header_t;
+
+/* CACE PPI headers */
+struct ppi_packet_header
+{
+	uint8_t pph_version;
+	uint8_t pph_flags;
+	uint16_t pph_len;
+	uint32_t pph_dlt;
+} __attribute__((packed));
+
+typedef struct ppi_packet_header ppi_packet_header_t;
+
+struct ppi_field_header
+{
+	uint16_t pfh_datatype;
+	uint16_t pfh_datalen;
+} __attribute__((__packed__));
+
+typedef struct ppi_field_header ppi_field_header_t;
+
+#define PPI_FIELD_11COMMON		2
+#define PPI_FIELD_11NMAC		3
+#define PPI_FIELD_11NMACPHY		4
+#define PPI_FIELD_SPECMAP		5
+#define PPI_FIELD_PROCINFO		6
+#define PPI_FIELD_CAPINFO		7
 
 // own structs
 
@@ -848,7 +875,8 @@ int main (int argc, char *argv[])
 
   if ((pcap_file_header.linktype != DLT_IEEE802_11)
    && (pcap_file_header.linktype != DLT_IEEE802_11_PRISM)
-   && (pcap_file_header.linktype != DLT_IEEE802_11_RADIO))
+   && (pcap_file_header.linktype != DLT_IEEE802_11_RADIO)
+   && (pcap_file_header.linktype != DLT_IEEE802_11_PPI_HDR))
   {
     fprintf (stderr, "%s: Unsupported linktype detected\n", in);
 
@@ -955,6 +983,16 @@ int main (int argc, char *argv[])
       packet_ptr    += ieee80211_radiotap_header->it_len;
       header.caplen -= ieee80211_radiotap_header->it_len;
       header.len    -= ieee80211_radiotap_header->it_len;
+    }
+    else if (pcap_file_header.linktype == DLT_IEEE802_11_PPI_HDR) {
+	    ppi_packet_header_t *ppi_packet_header = (ppi_packet_header_t *) packet;
+	    unsigned short  len = ppi_packet_header->pph_len;
+	    packet_ptr += len;
+	    header.caplen -= len;
+	    header.len    -= len;
+
+	    //if( n <= 0 || n>= (int) pkh.caplen )
+	    //	    continue;
     }
 
     process_packet (packet_ptr, &header);

@@ -1,4 +1,4 @@
-* v1.7 ->
+* v1.7 -> v1.8
 
 - Fix radiotap header parsing in cap2hccapx.c
 - Check for zero timestamp and abort if detected in cap2hccapx.c

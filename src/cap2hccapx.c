@@ -1234,15 +1234,39 @@ int main (int argc, char *argv[])
           fprintf (stderr, "BUG!!! AP:%d STA:%d\n", excpkt_ap->excpkt_num, excpkt_sta->excpkt_num);
         }
 
-        printf (" --> STA=%02x:%02x:%02x:%02x:%02x:%02x, Message Pair=%u, Replay Counter=%" PRIu64 "\n",
-          excpkt_sta->mac_sta[0],
-          excpkt_sta->mac_sta[1],
-          excpkt_sta->mac_sta[2],
-          excpkt_sta->mac_sta[3],
-          excpkt_sta->mac_sta[4],
-          excpkt_sta->mac_sta[5],
-          message_pair,
-          excpkt_sta->replay_counter);
+        int export = 1;
+
+        switch (message_pair)
+        {
+          case MESSAGE_PAIR_M32E3: export = 0; break;
+          case MESSAGE_PAIR_M34E3: export = 0; break;
+        }
+
+        if (export == 1)
+        {
+          printf (" --> STA=%02x:%02x:%02x:%02x:%02x:%02x, Message Pair=%u, Replay Counter=%" PRIu64 "\n",
+            excpkt_sta->mac_sta[0],
+            excpkt_sta->mac_sta[1],
+            excpkt_sta->mac_sta[2],
+            excpkt_sta->mac_sta[3],
+            excpkt_sta->mac_sta[4],
+            excpkt_sta->mac_sta[5],
+            message_pair,
+            excpkt_sta->replay_counter);
+        }
+        else
+        {
+          printf (" --> STA=%02x:%02x:%02x:%02x:%02x:%02x, Message Pair=%u [Skipped Export]\n",
+            excpkt_sta->mac_sta[0],
+            excpkt_sta->mac_sta[1],
+            excpkt_sta->mac_sta[2],
+            excpkt_sta->mac_sta[3],
+            excpkt_sta->mac_sta[4],
+            excpkt_sta->mac_sta[5],
+            message_pair);
+
+          continue;
+        }
 
         // finally, write hccapx
 

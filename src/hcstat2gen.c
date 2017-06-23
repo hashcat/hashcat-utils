@@ -18,6 +18,9 @@
  * License.....: MIT
  */
 
+// hashcat reads the file as lzma compress file, therefore we have to postprocess the output file:
+// lzma --compress --format=raw --stdout -9e thisfile > hashcat.hcstat2
+
 #define CHARSIZ 0x100
 
 #define PW_MAX 256

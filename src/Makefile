@@ -39,6 +39,7 @@ native:
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o gate.bin gate.c
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o generate-rules.bin generate-rules.c
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o hcstatgen.bin hcstatgen.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o hcstat2gen.bin hcstat2gen.c
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o keyspace.bin keyspace.c
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o len.bin len.c
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o mli2.bin mli2.c
@@ -76,6 +77,7 @@ windows:
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o gate.exe gate.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o generate-rules.exe generate-rules.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o hcstatgen.exe hcstatgen.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o hcstat2gen.exe hcstat2gen.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o keyspace.exe keyspace.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o len.exe len.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o mli2.exe mli2.c

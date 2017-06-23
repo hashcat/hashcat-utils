@@ -5,6 +5,7 @@
 - Increased maximum password length for hcstatgen from 64 to 256
 - Switched some datatypes and cleaned up in hcstatgen.c
 - Switched some datatypes and cleaned up in utils.c
+- Added hcstat2gen.c which is like hcstatgen but supports a maximum password length up to 256 and header
 
 * v1.7 -> v1.8
 

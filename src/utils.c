@@ -40,17 +40,6 @@ int fgetl (FILE *fd, const size_t sz, char *buf)
   return super_chop (s, len);
 }
 
-#ifndef strdup
-char *strdup (char *s)
-{
-  char *b = malloc (strlen (s) + 1);
-
-  strcpy (b, s);
-
-  return (b);
-}
-#endif
-
 #ifdef _WINDOWS
 
 uint get_random_num (const uint min, const uint max)

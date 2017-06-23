@@ -1,3 +1,11 @@
+* v1.8 -> xxx
+
+- Switched C standard from c99 to gnu99
+- Removed unused -lm requirement from hcstatgen
+- Increased maximum password length for hcstatgen from 64 to 256
+- Switched some datatypes and cleaned up in hcstatgen.c
+- Switched some datatypes and cleaned up in utils.c
+
 * v1.7 -> v1.8
 
 - Fix radiotap header parsing in cap2hccapx.c

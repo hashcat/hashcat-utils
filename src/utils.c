@@ -1,7 +1,9 @@
 typedef unsigned int uint;
 
-size_t super_chop (char *s, size_t len)
+int super_chop (char *s, const int len_orig)
 {
+  int len = len_orig;
+
   char *p = s + len - 1;
 
   while (len)
@@ -25,23 +27,21 @@ size_t super_chop (char *s, size_t len)
   return len;
 }
 
-int fgetl (FILE *stream, size_t sz, char *buf)
+int fgetl (FILE *fd, const size_t sz, char *buf)
 {
-  if (feof (stream)) return -1;
+  if (feof (fd)) return -1;
 
-  char *s = fgets (buf, sz, stream);
+  char *s = fgets (buf, sz - 1, fd);
 
   if (s == NULL) return -1;
 
-  size_t len = strlen (s);
+  const int len = (const int) strlen (s);
 
-  len = super_chop (s, len);
-
-  return len;
+  return super_chop (s, len);
 }
 
 #ifndef strdup
-char *strdup (const char *s)
+char *strdup (char *s)
 {
   char *b = malloc (strlen (s) + 1);
 

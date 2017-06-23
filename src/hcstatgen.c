@@ -20,8 +20,12 @@
 
 #define CHARSIZ 0x100
 
-#define PW_MIN  2
-#define PW_MAX  64
+#define PW_MAX 64
+
+#define ROOT_CNT   (PW_MAX * CHARSIZ)
+#define MARKOV_CNT (PW_MAX * CHARSIZ * CHARSIZ)
+
+#define FGETSBUFSZ 0x100000
 
 #define HEX 0
 
@@ -35,15 +39,19 @@
  *     - CHARSIZ key1
  */
 
-static uint8_t hex_convert (uint8_t c)
+typedef uint8_t  u8;
+typedef uint32_t u32;
+typedef uint64_t u64;
+
+#if HEX
+static u8 hex_convert (const u8 c)
 {
-  return (uint8_t)((c & 15) + (c >> 6) * 9);
+  return ((c & 15) + (c >> 6) * 9);
 }
+#endif
 
 int main (int argc, char *argv[])
 {
-  uint32_t i, j;
-
   if (argc != 2)
   {
     fprintf (stderr, "usage: %s outfile < dictionary\n", argv[0]);
@@ -53,34 +61,34 @@ int main (int argc, char *argv[])
 
   char *outfile = argv[1];
 
-  /* init data */
+  /* allocate memory */
 
-  const uint32_t root_cnt = PW_MAX * CHARSIZ;
+  u64 *root_stats_buf = (u64 *) calloc (ROOT_CNT, sizeof (u64));
 
-  uint64_t *root_stats_buf = (uint64_t *) calloc (root_cnt, sizeof (uint64_t));
+  u64 *markov_stats_buf = (u64 *) calloc (MARKOV_CNT, sizeof (u64));
 
-  uint64_t *root_stats_ptr = root_stats_buf;
+  char *buf = (char *) calloc (FGETSBUFSZ, sizeof (char));
 
-  uint64_t *root_stats_buf_by_pos[PW_MAX];
+  /* init pointer */
 
-  for (i = 0; i < PW_MAX; i++)
+  u64 *root_stats_ptr = root_stats_buf;
+
+  u64 *root_stats_buf_by_pos[PW_MAX];
+
+  for (int i = 0; i < PW_MAX; i++)
   {
     root_stats_buf_by_pos[i] = root_stats_ptr;
 
     root_stats_ptr += CHARSIZ;
   }
 
-  const uint32_t markov_cnt = PW_MAX * CHARSIZ * CHARSIZ;
+  u64 *markov_stats_ptr = markov_stats_buf;
 
-  uint64_t *markov_stats_buf = (uint64_t *) calloc (markov_cnt, sizeof (uint64_t));
+  u64 *markov_stats_buf_by_key[PW_MAX][CHARSIZ];
 
-  uint64_t *markov_stats_ptr = markov_stats_buf;
-
-  uint64_t *markov_stats_buf_by_key[PW_MAX][CHARSIZ];
-
-  for (i = 0; i < PW_MAX; i++)
+  for (int i = 0; i < PW_MAX; i++)
   {
-    for (j = 0; j < CHARSIZ; j++)
+    for (int j = 0; j < CHARSIZ; j++)
     {
       markov_stats_buf_by_key[i][j] = markov_stats_ptr;
 
@@ -90,82 +98,61 @@ int main (int argc, char *argv[])
 
   /* parse dictionary */
 
-  char tmp[BUFSIZ];
-
   printf ("Reading input...\n");
 
-  if (HEX)
+  #if HEX
+  while (!feof (stdin))
   {
-    while (!feof (stdin))
+    const int len = fgetl (stdin, FGETSBUFSZ, buf);
+
+    if (len == -1) continue;
+
+    const int max = (len > PW_MAX * 2) ? PW_MAX * 2 : len;
+
+    for (int pos = 0; pos < len; pos += 2)
     {
-      char *line_buf = fgets (tmp, BUFSIZ, stdin);
+      const u8 c0 = (hex_convert ((const u8) buf[pos + 0]) << 4)
+                  | (hex_convert ((const u8) buf[pos + 1]) << 0);
 
-      if (line_buf == NULL) continue;
+      root_stats_buf_by_pos[pos / 2][c0]++;
+    }
 
-      size_t line_len = super_chop (line_buf, strlen (line_buf));
+    for (int pos = 0; pos < len - 2; pos += 2)
+    {
+      const u8 c0 = (hex_convert ((const u8) buf[pos + 0]) << 4)
+                  | (hex_convert ((const u8) buf[pos + 1]) << 0);
 
-      if (line_len < PW_MIN) continue;
-      if (line_len > PW_MAX) continue;
+      const u8 c1 = (hex_convert ((const u8) buf[pos + 2]) << 4)
+                  | (hex_convert ((const u8) buf[pos + 3]) << 0);
 
-      size_t line_pos;
-
-      for (line_pos = 0; line_pos < line_len - 2; line_pos += 2)
-      {
-        uint8_t c0 = (uint8_t)(  hex_convert (line_buf[line_pos + 1]) << 0
-                               | hex_convert (line_buf[line_pos + 0]) << 4);
-        uint8_t c1 = (uint8_t)(  hex_convert (line_buf[line_pos + 3]) << 0
-                               | hex_convert (line_buf[line_pos + 2]) << 4);
-
-        root_stats_buf_by_pos[line_pos][c0]++;
-
-        markov_stats_buf_by_key[line_pos][c0][c1]++;
-      }
-
-      uint8_t c0 = (uint8_t)(  hex_convert (line_buf[line_pos + 1]) << 0
-                             | hex_convert (line_buf[line_pos + 0]) << 4);
-
-      root_stats_buf_by_pos[line_pos][c0]++;
+      markov_stats_buf_by_key[pos / 2][c0][c1]++;
     }
   }
-  else
+  #else
+  while (!feof (stdin))
   {
-    while (!feof (stdin))
+    const int len = fgetl (stdin, FGETSBUFSZ, buf);
+
+    if (len == -1) continue;
+
+    const int max = (len > PW_MAX) ? PW_MAX : len;
+
+    for (int pos = 0; pos < max; pos++)
     {
-      char *line_buf = fgets (tmp, BUFSIZ, stdin);
+      const u8 c0 = (const u8) buf[pos];
 
-      if (line_buf == NULL) continue;
+      root_stats_buf_by_pos[pos][c0]++;
+    }
 
-      size_t line_len = super_chop (line_buf, strlen (line_buf));
+    for (int pos = 0; pos < max - 1; pos++)
+    {
+      const u8 c0 = (const u8) buf[pos + 0];
+      const u8 c1 = (const u8) buf[pos + 1];
 
-      if (line_len < PW_MIN) continue;
-      if (line_len > PW_MAX) continue;
-
-      size_t line_pos;
-
-      for (line_pos = 0; line_pos < line_len - 1; line_pos += 1)
-      {
-        int c0 = (int) line_buf[line_pos + 0];
-        int c1 = (int) line_buf[line_pos + 1];
-
-        if (c0 < 0) continue;
-        if (c0 >= CHARSIZ) continue;
-
-        if (c1 < 0) continue;
-        if (c1 >= CHARSIZ) continue;
-
-        root_stats_buf_by_pos[line_pos][c0]++;
-
-        markov_stats_buf_by_key[line_pos][c0][c1]++;
-      }
-
-      int c0 = (int) line_buf[line_pos + 0];
-
-      if (c0 < 0) continue;
-      if (c0 >= CHARSIZ) continue;
-
-      root_stats_buf_by_pos[line_pos][c0]++;
+      markov_stats_buf_by_key[pos][c0][c1]++;
     }
   }
+  #endif
 
   /* write results */
 
@@ -180,13 +167,14 @@ int main (int argc, char *argv[])
     return (-1);
   }
 
-  fwrite (root_stats_buf,   sizeof (uint64_t), root_cnt,   fd);
-  fwrite (markov_stats_buf, sizeof (uint64_t), markov_cnt, fd);
+  fwrite (root_stats_buf,   sizeof (u64), ROOT_CNT,   fd);
+  fwrite (markov_stats_buf, sizeof (u64), MARKOV_CNT, fd);
+
+  fclose (fd);
 
   free (root_stats_buf);
   free (markov_stats_buf);
-
-  fclose (fd);
+  free (buf);
 
   return 0;
 }

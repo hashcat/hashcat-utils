@@ -532,7 +532,7 @@ static void db_essid_add (essid_t *essid, const u8 addr3[6], const int essid_sou
   {
     essid_t *essid_old = (essid_t *) ptr;
 
-    if (essid_source < essid_old->essid_source)
+    if (essid_source > essid_old->essid_source)
     {
       memcpy (essid_old, essid, sizeof (essid_t));
 

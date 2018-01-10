@@ -1095,6 +1095,10 @@ int main (int argc, char *argv[])
 
       ppi_packet_header_t *ppi_packet_header = (ppi_packet_header_t *) packet;
 
+      #ifdef BIG_ENDIAN_HOST
+      ppi_packet_header->pph_len    = byte_swap_16 (ppi_packet_header->pph_len);
+      #endif
+
       packet_ptr    += ppi_packet_header->pph_len;
       header.caplen -= ppi_packet_header->pph_len;
       header.len    -= ppi_packet_header->pph_len;

@@ -52,6 +52,7 @@ int comp_handshake(const void *p1, const void *p2)
   if (essid_diff != 0) return essid_diff;
   const int message_pair_diff = memcmp(&e1->message_pair, &e2->message_pair, 1);
   if (essid_diff != 0) return message_pair_diff;
+  return 0;
 }
 
 int main (int argc, char *argv[])
@@ -71,7 +72,6 @@ int main (int argc, char *argv[])
   if (input == NULL)
   {
     fprintf (stderr, "%s: %s\n", in, strerror (errno));
-
     return -1;
   }
 
@@ -89,13 +89,23 @@ int main (int argc, char *argv[])
 
   hccapx_t* handshakes = calloc(num_handshakes, sizeof(hccapx_t));
 
-  const int nread1 = fread (handshakes, sizeof (hccapx_t), num_handshakes, input);
+  int bytes_read = fread (handshakes, sizeof (hccapx_t), num_handshakes, input);
+  if (bytes_read <= 0) {
+    fprintf(stderr, "%s: Error reading file\n", in);
+    return -1;
+  }
 
   printf("Read %d handshakes\n", num_handshakes);
 
   qsort(handshakes, num_handshakes, sizeof(hccapx_t), comp_handshake);
   FILE* output = fopen(out, "wb");
-  fwrite(&handshakes[0], sizeof(hccapx_t), 1, output);
+  if (output == NULL)
+  {
+    fprintf (stderr, "%s: %s\n", out, strerror (errno));
+    return -1;
+  }
+
+  fwrite(&handshakes[0], sizeof(hccapx_t), 1, output); // This will probably work
   hccapx_t last_written_handshake = handshakes[0];
 
   int written = 1;
@@ -111,8 +121,6 @@ int main (int argc, char *argv[])
   }
   printf("Filtered: %d handshakes\n", num_handshakes - written);
   printf("Wrote: %d handshakes\n", written);
-
-
 
   fclose(input);
   fclose(output);

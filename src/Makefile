@@ -38,6 +38,7 @@ native:
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o expander.bin expander.c
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o gate.bin gate.c
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o generate-rules.bin generate-rules.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o hccapx-deduper.bin hccapx-deduper.c
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o hcstatgen.bin hcstatgen.c
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o hcstat2gen.bin hcstat2gen.c
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o keyspace.bin keyspace.c
@@ -76,6 +77,7 @@ windows:
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o expander.exe expander.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o gate.exe gate.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o generate-rules.exe generate-rules.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o hccapx-deduper.bin hccapx-deduper.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o hcstatgen.exe hcstatgen.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o hcstat2gen.exe hcstat2gen.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o keyspace.exe keyspace.c

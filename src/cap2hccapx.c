@@ -1019,7 +1019,7 @@ int main (int argc, char *argv[])
 
     u8 packet[TCPDUMP_DECODE_LEN];
 
-    if (header.caplen >= TCPDUMP_DECODE_LEN)
+    if (header.caplen >= TCPDUMP_DECODE_LEN || (signed)header.caplen < 0)
     {
       fprintf (stderr, "%s: Oversized packet detected\n", in);
 
@@ -1052,6 +1052,20 @@ int main (int argc, char *argv[])
       prism_header->msgcode = byte_swap_32 (prism_header->msgcode);
       prism_header->msglen  = byte_swap_32 (prism_header->msglen);
       #endif
+
+      if ((signed)prism_header->msglen < 0)
+      {
+        fprintf (stderr, "%s: Oversized packet detected\n", in);
+
+        break;
+      }
+
+      if ((signed)(header.caplen - prism_header->msglen) < 0)
+      {
+        fprintf (stderr, "%s: Oversized packet detected\n", in);
+
+        break;
+      }
 
       packet_ptr    += prism_header->msglen;
       header.caplen -= prism_header->msglen;

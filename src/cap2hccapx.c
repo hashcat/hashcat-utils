@@ -805,12 +805,8 @@ static void process_packet (const u8 *packet, const pcap_pkthdr_t *header)
   {
     // process header: ieee80211
 
-    int set = 0;
-
-    if (frame_control & IEEE80211_FCTL_TODS)   set++;
-    if (frame_control & IEEE80211_FCTL_FROMDS) set++;
-
-    if (set != 1) return;
+    int addr4_exist = ((frame_control & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) == 
+    (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS));
 
     // find offset to llc/snap header
 
@@ -828,6 +824,7 @@ static void process_packet (const u8 *packet, const pcap_pkthdr_t *header)
     // process header: the llc/snap header
 
     if (header->caplen < (llc_offset + sizeof (ieee80211_llc_snap_header_t))) return;
+    if (addr4_exist) llc_offset += 6;
 
     ieee80211_llc_snap_header_t *ieee80211_llc_snap_header = (ieee80211_llc_snap_header_t *) &packet[llc_offset];
 

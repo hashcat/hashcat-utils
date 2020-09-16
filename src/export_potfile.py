@@ -10,4 +10,4 @@ for line in sys.stdin:
     if passw.startswith('$HEX['):
       hexpassw = re.search('\$HEX\[([a-zA-Z0-9]+)\]', passw).group(1)
       passw = bytearray.fromhex(hexpassw).decode('latin-1')
-    print(passw)
+    print(repr(passw)[1:][:-1])

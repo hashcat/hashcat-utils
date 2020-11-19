@@ -1009,7 +1009,7 @@ int main (int argc, char *argv[])
     {
       fprintf (stderr, "Zero value timestamps detected in file: %s.\n", in);
       fprintf (stderr, "This prevents correct EAPOL-Key timeout calculation.\n");
-      fprintf (stderr, "Do not use preprocess the capture file with tools such as wpaclean.\n");
+      fprintf (stderr, "Do not preprocess the capture file with tools such as wpaclean.\n");
 
       return -1;
     }

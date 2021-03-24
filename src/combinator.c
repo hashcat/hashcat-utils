@@ -87,7 +87,7 @@ int main (int argc, char *argv[])
 {
   if (argc != 3)
   {
-    fprintf (stderr, "usage: %s file1 file2\n", argv[0]);
+    fprintf (stderr, "usage: %s file1 file2\nfile1 can be \"-\" for stdin.", argv[0]);
 
     return (-1);
   }
@@ -104,15 +104,22 @@ int main (int argc, char *argv[])
   FILE *fd1;
   FILE *fd2;
 
-  if ((fd1 = fopen (argv[1], "rb")) == NULL)
+  if (!strcmp (argv[1], "-"))
   {
-    fprintf (stderr, "%s: %s\n", argv[1], strerror (errno));
+    fd1 = stdin;
+  } 
+  else
+  {
+    if ((fd1 = fopen (argv[1], "rb")) == NULL)
+    {
+      fprintf (stderr, "%s: %s\n", argv[1], strerror (errno));
 
-    free (buf_in1);
-    free (buf_in2);
-    free (buf_out);
+      free (buf_in1);
+      free (buf_in2);
+      free (buf_out);
 
-    return (-1);
+      return (-1);
+    }
   }
 
   if ((fd2 = fopen (argv[2], "rb")) == NULL)

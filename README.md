@@ -25,8 +25,6 @@ Simply run make, like this:
 ```Makefile
 $ make all
 
-```
-You should see the binaries in `bin/` folder
 
 Binary distribution
 --------------

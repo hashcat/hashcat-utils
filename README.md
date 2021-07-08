@@ -15,7 +15,7 @@ Since they all work with STDIN and STDOUT you can group them into chains.
 Detailed description
 --------------
 
-tbd
+See the hashcat wiki page of hashcat-utils: https://hashcat.net/wiki/doku.php?id=hashcat_utils
 
 Compile
 --------------

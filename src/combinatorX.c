@@ -1,7 +1,7 @@
 /**
  * Name........: combinatorX
  * Author......: Gabriele 'matrix' Gristina <gabriele.gristina@gmail.com>
- * Version.....: 1.0
+ * Version.....: 1.1
  * License.....: MIT
  *
  * Enhanced version of jsteube 'combinator3'
@@ -29,7 +29,7 @@
 #define LEN_MAX 64
 
 #define SEGMENT_SIZE  (LEN_MAX * 1024 * 1024)
-#define SEGMENT_ALIGN ( 8 * 1024)
+#define SEGMENT_ALIGN (8 * 1024)
 
 // lightweight dolphin macro
 #define MEMORY_FREE_ADD(a) { freeList[freeListIdx++] = (void *)(a); }
@@ -89,9 +89,9 @@ bool session_init (bool restore, long *off_fd1, long *off_fd2, long *off_fd3, lo
 }
 
 /*
-void session_print (long off_fd1, long off_fd2, long off_fd3, long off_fd4, size_t off_vir_in1, size_t off_vir_in2, size_t off_vir_in3, size_t off_vir_in4)
+void session_print (long off_fd1, long off_fd2, long off_fd3, long off_fd4, long off_fd5, size_t off_vir_in1, size_t off_vir_in2, size_t off_vir_in3, size_t off_vir_in4, size_t off_vir_in5)
 {
-  printf ("Session data: %ld,%ld,%ld,%ld,%zu,%zu,%zu,%zu\n", off_fd1, off_fd2, off_fd3, off_fd4, off_vir_in1, off_vir_in2, off_vir_in3, off_vir_in4);
+  printf ("Session data: %ld,%ld,%ld,%ld,%ld,%zu,%zu,%zu,%zu,%zu\n", off_fd1, off_fd2, off_fd3, off_fd4, off_fd5, off_vir_in1, off_vir_in2, off_vir_in3, off_vir_in4, off_vir_in5);
   fflush (stdout);
 }
 */
@@ -342,7 +342,7 @@ static void usage (char *p)
     "  --sep1     | Char/String | Set separator between file1 and file2 | optional    | --sep1 'a.'\n" \
     "  --sep2     | Char/String | Set separator between file2 and file3 | optional    | --sep2 'bc'\n" \
     "  --sep3     | Char/String | Set separator between file3 and file4 | optional    | --sep3 ',d'\n" \
-    "  --sep4     | Char/String | Set separator between file4 and file4 | optional    | --sep4 ',d'\n" \
+    "  --sep4     | Char/String | Set separator between file4 and file5 | optional    | --sep4 'e.'\n" \
     "  --sepEnd   | Char/String | Set char/string at the end            | optional    | --sepEnd ']'\n" \
     "\n" \
     "  --skip     | Num         | Skip N segments                       | optional    | --skip 0\n" \
@@ -367,7 +367,7 @@ int main (int argc, char *argv[])
   int err = 0;
   int set = 0;
 
-  char **freeList = malloc(15 * sizeof(char *));
+  char **freeList = malloc (17 * sizeof(char *));
   int freeListIdx = 0;
 
   char *f1 = NULL, *f2 = NULL, *f3 = NULL, *f4 = NULL, *f5 = NULL;
@@ -547,6 +547,115 @@ int main (int argc, char *argv[])
     }
   }
 
+  if (!strcmp (f1, f2))
+  {
+    fprintf (stderr, "! Cannot use the same file as input (f1 vs f2) ...\n");
+    usage(argv[0]);
+
+    MEMORY_FREE_ALL
+
+    return -1;
+  }
+
+  if (f3 != NULL)
+  {
+    if (!strcmp (f1, f3))
+    {
+      fprintf (stderr, "! Cannot use the same file as input (f1 vs f3) ...\n");
+      usage(argv[0]);
+
+      MEMORY_FREE_ALL
+
+      return -1;
+    }
+
+    if (!strcmp (f2, f3))
+    {
+      fprintf (stderr, "! Cannot use the same file as input (f2 vs f3) ...\n");
+      usage(argv[0]);
+
+      MEMORY_FREE_ALL
+
+      return -1;
+    }
+  }
+
+  if (f4 != NULL)
+  {
+    if (!strcmp (f1, f4))
+    {
+      fprintf (stderr, "! Cannot use the same file as input (f1 vs f4) ...\n");
+      usage(argv[0]);
+
+      MEMORY_FREE_ALL
+
+      return -1;
+    }
+
+    if (!strcmp (f2, f4))
+    {
+      fprintf (stderr, "! Cannot use the same file as input (f2 vs f4) ...\n");
+      usage(argv[0]);
+
+      MEMORY_FREE_ALL
+
+      return -1;
+    }
+
+    if (!strcmp (f3, f4))
+    {
+      fprintf (stderr, "! Cannot use the same file as input (f3 vs f4) ...\n");
+      usage(argv[0]);
+
+      MEMORY_FREE_ALL
+
+      return -1;
+    }
+  }
+
+  if (f5 != NULL)
+  {
+    if (!strcmp (f1, f5))
+    {
+      fprintf (stderr, "! Cannot use the same file as input (f1 vs f5) ...\n");
+      usage(argv[0]);
+
+      MEMORY_FREE_ALL
+
+      return -1;
+    }
+
+    if (!strcmp (f2, f5))
+    {
+      fprintf (stderr, "! Cannot use the same file as input (f2 vs f5) ...\n");
+      usage(argv[0]);
+
+      MEMORY_FREE_ALL
+
+      return -1;
+    }
+
+    if (!strcmp (f3, f5))
+    {
+      fprintf (stderr, "! Cannot use the same file as input (f3 vs f5) ...\n");
+      usage(argv[0]);
+
+      MEMORY_FREE_ALL
+
+      return -1;
+    }
+
+    if (!strcmp (f4, f5))
+    {
+      fprintf (stderr, "! Cannot use the same file as input (f4 vs f5) ...\n");
+      usage(argv[0]);
+
+      MEMORY_FREE_ALL
+
+      return -1;
+    }
+  }
+
   if (session_isSet && restore_isSet)
   {
     fprintf (stderr, "! Cannot use --session and --restore together ...\n");
@@ -693,7 +802,7 @@ int main (int argc, char *argv[])
   {
     session_init (restore_isSet, &off_fd1, &off_fd2, &off_fd3, &off_fd4, &off_fd5, &off_vir_in1, &off_vir_in2, &off_vir_in3, &off_vir_in4, &off_vir_in5);
 
-    //session_print (off_fd1, off_fd2, off_fd3, off_fd4, off_vir_in1, off_vir_in2, off_vir_in3, off_vir_in4);
+    //session_print (off_fd1, off_fd2, off_fd3, off_fd4, off_fd5, off_vir_in1, off_vir_in2, off_vir_in3, off_vir_in4, off_vir_in5);
 
     if (restore_isSet)
     {

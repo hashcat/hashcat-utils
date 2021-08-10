@@ -42,6 +42,7 @@ release: native windows
 clean:
 	rm -f ../bin/*
 	rm -f *.bin *.exe
+	rm -rf *.dSYM
 
 ##
 ## native

@@ -98,7 +98,7 @@ windows:
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o cleanup-rules.exe cleanup-rules.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o combinator.exe combinator.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o combinator3.exe combinator3.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o combinatorX.bin combinatorX.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o combinatorX.exe combinatorX.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o combipow.exe combipow.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o ct3_to_ntlm.exe ct3_to_ntlm.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o cutb.exe cutb.c

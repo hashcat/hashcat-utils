@@ -2,7 +2,33 @@
 ##  Makefile
 ##
 
-CFLAGS += -Wall -W -pipe -O2 -std=gnu99
+DEBUG                   := 0
+
+CFLAGS                  += -Wall -W -pipe -std=gnu99
+
+ifeq ($(DEBUG),0)
+CFLAGS                  += -O2
+ifneq ($(UNAME),Darwin)
+LFLAGS                  += -s
+endif
+else
+ifeq ($(DEBUG),1)
+ifneq ($(UNAME),Darwin)
+CFLAGS                  += -DDEBUG -Og -ggdb
+else
+CFLAGS                  += -DDEBUG -O0 -ggdb
+endif
+else
+ifeq ($(DEBUG),2)
+ifneq ($(UNAME),Darwin)
+CFLAGS                  += -DDEBUG -Og -ggdb
+else
+CFLAGS                  += -DDEBUG -O0 -ggdb
+endif
+CFLAGS                  += -fsanitize=address -fno-omit-frame-pointer
+endif
+endif
+endif
 
 all: clean native
 

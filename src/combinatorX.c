@@ -26,9 +26,9 @@
 
 #include "utils.c"
 
-#define LEN_MAX 32
+#define LEN_MAX 64
 
-#define SEGMENT_SIZE  (32 * 1024 * 1024)
+#define SEGMENT_SIZE  (LEN_MAX * 1024 * 1024)
 #define SEGMENT_ALIGN ( 8 * 1024)
 
 // lightweight dolphin macro
@@ -46,7 +46,7 @@ void sigHandler (int sig)
   end = true;
 }
 
-bool session_init (bool restore, long *off_fd1, long *off_fd2, long *off_fd3, long *off_fd4, ssize_t *off_vir_in1, ssize_t *off_vir_in2, ssize_t *off_vir_in3, ssize_t *off_vir_in4)
+bool session_init (bool restore, long *off_fd1, long *off_fd2, long *off_fd3, long *off_fd4, long *off_fd5, ssize_t *off_vir_in1, ssize_t *off_vir_in2, ssize_t *off_vir_in3, ssize_t *off_vir_in4, ssize_t *off_vir_in5)
 {
   char *mode = (restore) ? "r+" : "w+";
 
@@ -65,14 +65,16 @@ bool session_init (bool restore, long *off_fd1, long *off_fd2, long *off_fd3, lo
     *off_fd2 = 0;
     *off_fd3 = 0;
     *off_fd4 = 0;
+    *off_fd5 = 0;
 
     *off_vir_in1 = 0;
     *off_vir_in2 = 0;
     *off_vir_in3 = 0;
     *off_vir_in4 = 0;
+    *off_vir_in5 = 0;
 
     // write status
-    fprintf (sfp, "%ld %ld %ld %ld %zu %zu %zu %zu",*off_fd1, *off_fd2, *off_fd3, *off_fd4, *off_vir_in1, *off_vir_in2, *off_vir_in3, *off_vir_in4);
+    fprintf (sfp, "%ld %ld %ld %ld %ld %zu %zu %zu %zu %zu",*off_fd1, *off_fd2, *off_fd3, *off_fd4, *off_fd5, *off_vir_in1, *off_vir_in2, *off_vir_in3, *off_vir_in4, *off_vir_in5);
     fflush (sfp);
     ftruncate (fileno (sfp), ftell (sfp));
     fflush (sfp);
@@ -94,10 +96,10 @@ void session_print (long off_fd1, long off_fd2, long off_fd3, long off_fd4, size
 }
 */
 
-void session_update (long off_fd1, long off_fd2, long off_fd3, long off_fd4, size_t off_vir_in1, size_t off_vir_in2, size_t off_vir_in3, size_t off_vir_in4)
+void session_update (long off_fd1, long off_fd2, long off_fd3, long off_fd4, long off_fd5, size_t off_vir_in1, size_t off_vir_in2, size_t off_vir_in3, size_t off_vir_in4, size_t off_vir_in5)
 {
   rewind (sfp);
-  fprintf (sfp, "%ld %ld %ld %ld %zu %zu %zu %zu", off_fd1, off_fd2, off_fd3, off_fd4, off_vir_in1, off_vir_in2, off_vir_in3, off_vir_in4);
+  fprintf (sfp, "%ld %ld %ld %ld %ld %zu %zu %zu %zu %zu", off_fd1, off_fd2, off_fd3, off_fd4, off_fd5, off_vir_in1, off_vir_in2, off_vir_in3, off_vir_in4, off_vir_in5);
   fflush (sfp);
   ftruncate (fileno (sfp), ftell (sfp));
   fflush (sfp);
@@ -144,7 +146,7 @@ static size_t read_segment (char *buf, FILE *fd)
 
 static size_t get_line_len (char *pos, char *max)
 {
-  char *cur = pos;
+  char *cur = NULL;
 
   for (cur = pos; cur < max; cur++)
   {
@@ -156,17 +158,42 @@ static size_t get_line_len (char *pos, char *max)
   return (len);
 }
 
-static void add (char *ptr_out,
+static bool add (char *ptr_out,
                  char *ptr_in1, size_t len_in1,
                  char *ptr_in2, size_t len_in2,
                  char *ptr_in3, size_t len_in3,
                  char *ptr_in4, size_t len_in4,
+                 char *ptr_in5, size_t len_in5,
                  char *sepStart, size_t sepStart_len,
                  char *sep1, size_t sep1_len,
                  char *sep2, size_t sep2_len,
                  char *sep3, size_t sep3_len,
-                 char *sepEnd, size_t sepEnd_len)
+                 char *sep4, size_t sep4_len,
+                 char *sepEnd, size_t sepEnd_len, bool skipRep_isSet)
 {
+  if (skipRep_isSet)
+  {
+    char *out1 = ptr_in1;
+    char *out2 = ptr_in2;
+    char *out3 = ptr_in3;
+    char *out4 = ptr_in4;
+    char *out5 = ptr_in5;
+
+    if (len_in2 == len_in1 && memcmp (out1, out2, len_in1) == 0) return false;
+
+    if (len_in3 == len_in2 && memcmp (out3, out2, len_in2) == 0) return false;
+    if (len_in3 == len_in1 && memcmp (out3, out1, len_in1) == 0) return false;
+
+    if (len_in4 == len_in3 && memcmp (out4, out3, len_in3) == 0) return false;
+    if (len_in4 == len_in2 && memcmp (out4, out2, len_in2) == 0) return false;
+    if (len_in4 == len_in1 && memcmp (out4, out1, len_in1) == 0) return false;
+
+    if (len_in5 == len_in4 && memcmp (out5, out4, len_in4) == 0) return false;
+    if (len_in5 == len_in3 && memcmp (out5, out3, len_in3) == 0) return false;
+    if (len_in5 == len_in2 && memcmp (out5, out2, len_in2) == 0) return false;
+    if (len_in5 == len_in1 && memcmp (out5, out1, len_in1) == 0) return false;
+  }
+
   if (sepStart_len != 0)
   {
     memcpy (ptr_out, sepStart, sepStart_len);
@@ -203,6 +230,15 @@ static void add (char *ptr_out,
   memcpy (ptr_out, ptr_in4, len_in4);
   ptr_out += len_in4;
 
+  if (sep4_len != 0)
+  {
+    memcpy (ptr_out, sep4, sep4_len);
+    ptr_out += sep4_len;
+  }
+
+  memcpy (ptr_out, ptr_in5, len_in5);
+  ptr_out += len_in5;
+
   if (sepEnd_len != 0)
   {
     memcpy (ptr_out, sepEnd, sepEnd_len);
@@ -210,6 +246,8 @@ static void add (char *ptr_out,
   }
 
   *ptr_out = '\n';
+
+  return true;
 }
 
 static struct option long_options[] =
@@ -218,15 +256,18 @@ static struct option long_options[] =
   {"file2",    required_argument, NULL, 0xf2},
   {"file3",    required_argument, NULL, 0xf3},
   {"file4",    required_argument, NULL, 0xf4},
+  {"file5",    required_argument, NULL, 0xf5},
   {"sepStart", required_argument, NULL, 0xa0},
   {"sep1",     required_argument, NULL, 0xa1},
   {"sep2",     required_argument, NULL, 0xa2},
   {"sep3",     required_argument, NULL, 0xa3},
+  {"sep4",     required_argument, NULL, 0xa4},
   {"sepEnd",   required_argument, NULL, 0xaf},
   {"skip",     required_argument, NULL, 0xb0},
   {"limit",    required_argument, NULL, 0xb1},
   {"session",  required_argument, NULL, 0xb2},
   {"restore",  required_argument, NULL, 0xb3},
+  {"skip-rep",       no_argument, NULL, 0xb4},
   {0, 0, 0, 0}
 };
 
@@ -234,15 +275,16 @@ static struct option long_options[] =
  * add to output buffer
  */
 
-#define ADD_TO_OUTPUT_BUFFER(buf_out,ptr_out,ptr_in1,vir_in1,ptr_in2,vir_in2,ptr_in3,vir_in3,ptr_in4,vir_in4,sepStart,sepStart_len,sep1,sep1_len,sep2,sep2_len,sep3,sep3_len,sepEnd,sepEnd_len) \
+#define ADD_TO_OUTPUT_BUFFER(buf_out,ptr_out,ptr_in1,vir_in1,ptr_in2,vir_in2,ptr_in3,vir_in3,ptr_in4,vir_in4,ptr_in5,vir_in5,sepStart,sepStart_len,sep1,sep1_len,sep2,sep2_len,sep3,sep3_len,sep4,sep4_len,sepEnd,sepEnd_len, opt_skipRep) \
 { \
   size_t len_out = (size_t) (ptr_out - buf_out); \
-  size_t len_add = sepStart_len + vir_in1 + sep1_len + vir_in2 + sep2_len + vir_in3 + sep3_len + vir_in4 + sepEnd_len + 1; \
+  size_t len_add = sepStart_len + vir_in1 + sep1_len + vir_in2 + sep2_len + vir_in3 + sep3_len + vir_in4 + sep4_len + vir_in5 + sepEnd_len + 1; \
+  bool ret = false; \
 \
   if ((len_out + len_add) < SEGMENT_SIZE) \
   { \
-    add (ptr_out, ptr_in1, vir_in1, ptr_in2, vir_in2, ptr_in3, vir_in3, ptr_in4, vir_in4, sepStart, sepStart_len, sep1, sep1_len, sep2, sep2_len, sep3, sep3_len, sepEnd, sepEnd_len); \
-    ptr_out += len_add; \
+    ret = add (ptr_out, ptr_in1, vir_in1, ptr_in2, vir_in2, ptr_in3, vir_in3, ptr_in4, vir_in4, ptr_in5, vir_in5, sepStart, sepStart_len, sep1, sep1_len, sep2, sep2_len, sep3, sep3_len, sep4, sep4_len, sepEnd, sepEnd_len, opt_skipRep); \
+    if (ret) ptr_out += len_add; \
   } \
   else \
   { \
@@ -252,7 +294,7 @@ static struct option long_options[] =
       { \
         fwrite (buf_out, 1, len_out, stdout); \
         fflush (stdout); \
-        if (session_isSet || restore_isSet) session_update (off_fd1, off_fd2, off_fd3, off_fd4, off_vir_in1, off_vir_in2, off_vir_in3, off_vir_in4); \
+        if (session_isSet || restore_isSet) session_update (off_fd1, off_fd2, off_fd3, off_fd4, off_fd5, off_vir_in1, off_vir_in2, off_vir_in3, off_vir_in4, off_vir_in5); \
         if (limit_isSet) limit--; \
         if ((end = (limit_isSet && limit <= 0))) break; \
       } \
@@ -272,14 +314,14 @@ static struct option long_options[] =
       { \
         fwrite (buf_out, 1, len_out, stdout); \
         fflush (stdout); \
-        if (session_isSet) session_update (off_fd1, off_fd2, off_fd3, off_fd4, off_vir_in1, off_vir_in2, off_vir_in3, off_vir_in4); \
+        if (session_isSet) session_update (off_fd1, off_fd2, off_fd3, off_fd4, off_fd5, off_vir_in1, off_vir_in2, off_vir_in3, off_vir_in4, off_vir_in5); \
         if (limit_isSet) limit--; \
         if ((end = (limit_isSet && limit <= 0))) break; \
       } \
     } \
     ptr_out = buf_out; \
-    add (ptr_out, ptr_in1, vir_in1, ptr_in2, vir_in2, ptr_in3, vir_in3, ptr_in4, vir_in4, sepStart, sepStart_len, sep1, sep1_len, sep2, sep2_len, sep3, sep3_len, sepEnd, sepEnd_len); \
-    ptr_out += len_add; \
+    ret = add (ptr_out, ptr_in1, vir_in1, ptr_in2, vir_in2, ptr_in3, vir_in3, ptr_in4, vir_in4, ptr_in5, vir_in5, sepStart, sepStart_len, sep1, sep1_len, sep2, sep2_len, sep3, sep3_len, sep4, sep4_len, sepEnd, sepEnd_len, opt_skipRep); \
+    if (ret) ptr_out += len_add; \
   } \
 }
 
@@ -294,15 +336,18 @@ static void usage (char *p)
     "  --file2    | Path        | Set file2 path                        | required    | --file2 wordlist2.txt\n" \
     "  --file3    | Path        | Set file3 path                        | optional    | --file3 wordlist3.txt\n" \
     "  --file4    | Path        | Set file4 path                        | optional    | --file4 wordlist4.txt\n" \
+    "  --file5    | Path        | Set file5 path                        | optional    | --file5 wordlist5.txt\n" \
     "\n" \
     "  --sepStart | Char/String | Set char/string at the beginning      | optional    | --sepStart '['\n" \
     "  --sep1     | Char/String | Set separator between file1 and file2 | optional    | --sep1 'a.'\n" \
     "  --sep2     | Char/String | Set separator between file2 and file3 | optional    | --sep2 'bc'\n" \
     "  --sep3     | Char/String | Set separator between file3 and file4 | optional    | --sep3 ',d'\n" \
+    "  --sep4     | Char/String | Set separator between file4 and file4 | optional    | --sep4 ',d'\n" \
     "  --sepEnd   | Char/String | Set char/string at the end            | optional    | --sepEnd ']'\n" \
     "\n" \
     "  --skip     | Num         | Skip N segments                       | optional    | --skip 0\n" \
     "  --limit    | Num         | Exit after N segments                 | optional    | --limit 1\n" \
+    "  --skip-rep |             | Skip sentences with repeated words    | optional    | --skip-rep\n" \
     "\n" \
     "  --session  | String      | Set session name                      | optional    | --session testSession\n" \
     "  --restore  | String      | Restore by session name               | optional    | --restore testSession\n" \
@@ -325,9 +370,9 @@ int main (int argc, char *argv[])
   char **freeList = malloc(15 * sizeof(char *));
   int freeListIdx = 0;
 
-  char *f1 = NULL, *f2 = NULL, *f3 = NULL, *f4 = NULL;
-  char *sepStart = NULL, *sep1 = NULL, *sep2 = NULL, *sep3 = NULL, *sepEnd = NULL;
-  size_t sepStart_len = 0, sep1_len = 0, sep2_len = 0, sep3_len = 0, sepEnd_len = 0;
+  char *f1 = NULL, *f2 = NULL, *f3 = NULL, *f4 = NULL, *f5 = NULL;
+  char *sepStart = NULL, *sep1 = NULL, *sep2 = NULL, *sep3 = NULL, *sep4 = NULL, *sepEnd = NULL;
+  size_t sepStart_len = 0, sep1_len = 0, sep2_len = 0, sep3_len = 0, sep4_len = 0, sepEnd_len = 0;
 
   unsigned long skip = 0;
   long limit = 0;
@@ -335,6 +380,7 @@ int main (int argc, char *argv[])
   bool skip_isSet = false;
   bool session_isSet = false;
   bool restore_isSet = false;
+  bool skipRep_isSet = false;
 
   while ((opt = getopt_long_only (argc, argv,"", long_options, &long_index )) != -1)
   {
@@ -368,6 +414,13 @@ int main (int argc, char *argv[])
         MEMORY_FREE_ADD(sep3)
         break;
 
+      case 0xa4:
+        sep4_len = strlen(optarg);
+        sep4 = strdup(optarg);
+
+        MEMORY_FREE_ADD(sep4)
+        break;
+
       case 0xaf:
         sepEnd_len = strlen(optarg);
         sepEnd = strdup(optarg);
@@ -392,6 +445,11 @@ int main (int argc, char *argv[])
 
       case 0xf4:
         if (strlen (optarg) > 0 && access (optarg, F_OK) == 0) { f4 = strdup (optarg); MEMORY_FREE_ADD(f4) }
+        else err++;
+        break;
+
+      case 0xf5:
+        if (strlen (optarg) > 0 && access (optarg, F_OK) == 0) { f5 = strdup (optarg); MEMORY_FREE_ADD(f5) }
         else err++;
         break;
 
@@ -446,6 +504,10 @@ int main (int argc, char *argv[])
         }
         break;
 
+      case 0xb4:
+        skipRep_isSet = true;
+        break;
+
       default:
         err++;
         break;
@@ -464,9 +526,9 @@ int main (int argc, char *argv[])
 
   if (f3 == NULL)
   {
-    if (sep3)
+    if (sep3 || sep4)
     {
-      fprintf (stderr, "! Cannot set --sep3 if file3 is not set ...\n");
+      fprintf (stderr, "! Cannot set --sep3 or --sep4 if file3 is not set ...\n");
       usage(argv[0]);
 
       MEMORY_FREE_ALL
@@ -474,9 +536,9 @@ int main (int argc, char *argv[])
       return -1;
     }
 
-    if (f4)
+    if (f4 || f5)
     {
-      fprintf (stderr, "! Cannot set --file4 if file3 is not set ...\n");
+      fprintf (stderr, "! Cannot set --file4 or --file5 if file3 is not set ...\n");
       usage(argv[0]);
 
       MEMORY_FREE_ALL
@@ -507,6 +569,7 @@ int main (int argc, char *argv[])
   char *buf_in2 = (char *) malloc (sz_buf);
   char *buf_in3 = NULL;
   char *buf_in4 = NULL;
+  char *buf_in5 = NULL;
 
   MEMORY_FREE_ADD (buf_in1)
   MEMORY_FREE_ADD (buf_in2)
@@ -523,6 +586,12 @@ int main (int argc, char *argv[])
 
     MEMORY_FREE_ADD (buf_in4)
   }
+  if (f5 != NULL)
+  {
+    buf_in5 = (char *) malloc (sz_buf);
+
+    MEMORY_FREE_ADD (buf_in5)
+  }
 
   char *buf_out = (char *) malloc (sz_buf);
 
@@ -534,6 +603,7 @@ int main (int argc, char *argv[])
   FILE *fd2 = NULL;
   FILE *fd3 = NULL;
   FILE *fd4 = NULL;
+  FILE *fd5 = NULL;
 
   if ((fd1 = fopen (f1, "rb")) == NULL)
   {
@@ -580,54 +650,70 @@ int main (int argc, char *argv[])
     return (-1);
   }
 
+  if (f5 && (fd5 = fopen (f5, "rb")) == NULL)
+  {
+    fprintf (stderr, "%s: %s\n", f5, strerror (errno));
+
+    fclose (fd1);
+    fclose (fd2);
+    fclose (fd3);
+    fclose (fd4);
+
+    MEMORY_FREE_ALL
+
+    return (-1);
+  }
+
   char *ptr_in1 = NULL;
   char *ptr_in2 = NULL;
   char *ptr_in3 = NULL;
   char *ptr_in4 = NULL;
+  char *ptr_in5 = NULL;
 
   size_t vir_in1 = 0;
   size_t vir_in2 = 0;
   size_t vir_in3 = 0;
   size_t vir_in4 = 0;
+  size_t vir_in5 = 0;
 
   // session/restore
-  long off_fd1 = 0, off_fd1_init = -1;
-  long off_fd2 = 0, off_fd2_init = -1;
-  long off_fd3 = 0, off_fd3_init = -1;
-  long off_fd4 = 0, off_fd4_init = -1;
+  long off_fd1 = 0;
+  long off_fd2 = 0;
+  long off_fd3 = 0;
+  long off_fd4 = 0;
+  long off_fd5 = 0;
+
   ssize_t off_vir_in1 = 0, off_vir_in1_init = -1;
   ssize_t off_vir_in2 = 0, off_vir_in2_init = -1;
   ssize_t off_vir_in3 = 0, off_vir_in3_init = -1;
   ssize_t off_vir_in4 = 0, off_vir_in4_init = -1;
+  ssize_t off_vir_in5 = 0, off_vir_in5_init = -1;
 
   if (session_isSet || restore_isSet)
   {
-    session_init (restore_isSet, &off_fd1, &off_fd2, &off_fd3, &off_fd4, &off_vir_in1, &off_vir_in2, &off_vir_in3, &off_vir_in4);
+    session_init (restore_isSet, &off_fd1, &off_fd2, &off_fd3, &off_fd4, &off_fd5, &off_vir_in1, &off_vir_in2, &off_vir_in3, &off_vir_in4, &off_vir_in5);
 
     //session_print (off_fd1, off_fd2, off_fd3, off_fd4, off_vir_in1, off_vir_in2, off_vir_in3, off_vir_in4);
 
     if (restore_isSet)
     {
       // set restore point
-      off_fd1_init = off_fd1;
-      off_fd2_init = off_fd2;
-      off_fd3_init = off_fd3;
-      off_fd4_init = off_fd4;
-
       off_vir_in1_init = off_vir_in1;
       off_vir_in2_init = off_vir_in2;
       off_vir_in3_init = off_vir_in3;
       off_vir_in4_init = off_vir_in4;
+      off_vir_in5_init = off_vir_in5;
 
       // initial set fd* file offsets
       if (off_fd1 > 0) fseek (fd1, off_fd1, SEEK_SET);
       if (off_fd2 > 0) fseek (fd2, off_fd2, SEEK_SET);
       if (off_fd3 > 0) fseek (fd3, off_fd3, SEEK_SET);
       if (off_fd4 > 0) fseek (fd4, off_fd4, SEEK_SET);
+      if (off_fd5 > 0) fseek (fd5, off_fd5, SEEK_SET);
 
       // reset main counters
-      off_fd1 = off_fd2 = off_fd3 = off_fd4 = 0;
-      off_vir_in1 = off_vir_in2 = off_vir_in3 = off_vir_in4 = 0;
+      off_fd1 = off_fd2 = off_fd3 = off_fd4 = off_fd5 = 0;
+      off_vir_in1 = off_vir_in2 = off_vir_in3 = off_vir_in4 = off_vir_in5 = 0;
     }
   }
 
@@ -739,7 +825,46 @@ int main (int argc, char *argv[])
                       if (restore_isSet && off_vir_in4_init >= 0 && off_vir_in4 < off_vir_in4_init) continue;
                       off_vir_in4_init = -1;
 
-                      ADD_TO_OUTPUT_BUFFER(buf_out, ptr_out, ptr_in1, vir_in1, ptr_in2, vir_in2, ptr_in3, vir_in3, ptr_in4, vir_in4, sepStart, sepStart_len, sep1, sep1_len, sep2, sep2_len, sep3, sep3_len, sepEnd, sepEnd_len)
+                      if (buf_in5)
+                      {
+                        while (!feof (fd5) && !end)
+                        {
+                          off_fd5 = ftell (fd5);
+
+                          size_t real_sz5 = read_segment (buf_in5, fd5);
+                          size_t len_in5 = 0;
+                          char *max_in5 = buf_in5 + real_sz5;
+
+                          for (ptr_in5 = buf_in5; ptr_in5 < max_in5 && !end; ptr_in5 += len_in5 + 1)
+                          {
+                            len_in5 = get_line_len (ptr_in5, max_in5);
+                            vir_in5 = len_in5;
+
+                            while (vir_in5)
+                            {
+                              if (ptr_in5[vir_in5 - 1] != '\r') break;
+                              vir_in5--;
+                            }
+
+                            if (vir_in5 > LEN_MAX) continue;
+
+                            // restore 5 if needed
+                            off_vir_in5 += vir_in5;
+                            if (restore_isSet && off_vir_in5_init >= 0 && off_vir_in5 < off_vir_in5_init) continue;
+                            off_vir_in5_init = -1;
+
+                            ADD_TO_OUTPUT_BUFFER(buf_out, ptr_out, ptr_in1, vir_in1, ptr_in2, vir_in2, ptr_in3, vir_in3, ptr_in4, vir_in4, ptr_in5, vir_in5, sepStart, sepStart_len, sep1, sep1_len, sep2, sep2_len, sep3, sep3_len, sep4, sep4_len, sepEnd, sepEnd_len, skipRep_isSet)
+                          }
+                        }
+                        rewind (fd5);
+
+                        // reset cnt 5
+                        off_vir_in5 = 0;
+                      }
+                      else
+                      {
+                        ADD_TO_OUTPUT_BUFFER(buf_out, ptr_out, ptr_in1, vir_in1, ptr_in2, vir_in2, ptr_in3, vir_in3, ptr_in4, vir_in4, ptr_in5, vir_in5, sepStart, sepStart_len, sep1, sep1_len, sep2, sep2_len, sep3, sep3_len, sep4, sep4_len, sepEnd, sepEnd_len, skipRep_isSet)
+                      }
                     }
                   }
                   rewind (fd4);
@@ -749,7 +874,7 @@ int main (int argc, char *argv[])
                 }
                 else
                 {
-                  ADD_TO_OUTPUT_BUFFER(buf_out, ptr_out, ptr_in1, vir_in1, ptr_in2, vir_in2, ptr_in3, vir_in3, ptr_in4, vir_in4, sepStart, sepStart_len, sep1, sep1_len, sep2, sep2_len, sep3, sep3_len, sepEnd, sepEnd_len)
+                  ADD_TO_OUTPUT_BUFFER(buf_out, ptr_out, ptr_in1, vir_in1, ptr_in2, vir_in2, ptr_in3, vir_in3, ptr_in4, vir_in4, ptr_in5, vir_in5, sepStart, sepStart_len, sep1, sep1_len, sep2, sep2_len, sep3, sep3_len, sep4, sep4_len, sepEnd, sepEnd_len, skipRep_isSet)
                 }
               }
             }
@@ -760,7 +885,7 @@ int main (int argc, char *argv[])
           }
           else
           {
-            ADD_TO_OUTPUT_BUFFER(buf_out, ptr_out, ptr_in1, vir_in1, ptr_in2, vir_in2, ptr_in3, vir_in3, ptr_in4, vir_in4, sepStart, sepStart_len, sep1, sep1_len, sep2, sep2_len, sep3, sep3_len, sepEnd, sepEnd_len)
+            ADD_TO_OUTPUT_BUFFER(buf_out, ptr_out, ptr_in1, vir_in1, ptr_in2, vir_in2, ptr_in3, vir_in3, ptr_in4, vir_in4, ptr_in5, vir_in5, sepStart, sepStart_len, sep1, sep1_len, sep2, sep2_len, sep3, sep3_len, sep4, sep4_len, sepEnd, sepEnd_len, skipRep_isSet)
           }
         }
       }
@@ -778,6 +903,7 @@ int main (int argc, char *argv[])
     fwrite (buf_out, 1, len_out, stdout);
   }
 
+  if (fd5) fclose (fd5);
   if (fd4) fclose (fd4);
   if (fd3) fclose (fd3);
   fclose (fd2);

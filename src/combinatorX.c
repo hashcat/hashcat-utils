@@ -47,7 +47,7 @@ void sigHandler (int sig)
   end = true;
 }
 
-bool session_init (bool restore, long *off_fd1, long *off_fd2, long *off_fd3, long *off_fd4, long *off_fd5, unsigned long long *off_vir_in1, unsigned long long *off_vir_in2, unsigned long long *off_vir_in3, unsigned long long *off_vir_in4, unsigned long long *off_vir_in5)
+bool session_init (bool restore, int64_t *off_fd1, int64_t *off_fd2, int64_t *off_fd3, int64_t *off_fd4, int64_t *off_fd5, int64_t *off_vir_in1, int64_t *off_vir_in2, int64_t *off_vir_in3, int64_t *off_vir_in4, int64_t *off_vir_in5)
 {
   char *mode = (restore) ? "r+" : "w+";
 
@@ -75,7 +75,7 @@ bool session_init (bool restore, long *off_fd1, long *off_fd2, long *off_fd3, lo
     *off_vir_in5 = 0;
 
     // write status
-    fprintf (sfp, "%ld %ld %ld %ld %ld %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 "", *off_fd1, *off_fd2, *off_fd3, *off_fd4, *off_fd5, *off_vir_in1, *off_vir_in2, *off_vir_in3, *off_vir_in4, *off_vir_in5);
+    fprintf (sfp, "%" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 "", *off_fd1, *off_fd2, *off_fd3, *off_fd4, *off_fd5, *off_vir_in1, *off_vir_in2, *off_vir_in3, *off_vir_in4, *off_vir_in5);
     fflush (sfp);
 
     if (ftruncate (fileno (sfp), ftell (sfp)) != 0)
@@ -90,7 +90,7 @@ bool session_init (bool restore, long *off_fd1, long *off_fd2, long *off_fd3, lo
   }
 
   // restore session
-  if (fscanf (sfp, "%ld %ld %ld %ld %ld %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 "", off_fd1, off_fd2, off_fd3, off_fd4, off_fd5, off_vir_in1, off_vir_in2, off_vir_in3, off_vir_in4, off_vir_in5) != 10)
+  if (fscanf (sfp, "%" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 "", off_fd1, off_fd2, off_fd3, off_fd4, off_fd5, off_vir_in1, off_vir_in2, off_vir_in3, off_vir_in4, off_vir_in5) != 10)
   {
     fprintf (stderr, "! fscanf() failed\n");
     fclose (sfp);
@@ -104,15 +104,15 @@ bool session_init (bool restore, long *off_fd1, long *off_fd2, long *off_fd3, lo
 /*
 void session_print (long off_fd1, long off_fd2, long off_fd3, long off_fd4, long off_fd5, size_t off_vir_in1, size_t off_vir_in2, size_t off_vir_in3, size_t off_vir_in4, size_t off_vir_in5)
 {
-  printf ("Session data: %ld,%ld,%ld,%ld,%ld,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 "\n", off_fd1, off_fd2, off_fd3, off_fd4, off_fd5, off_vir_in1, off_vir_in2, off_vir_in3, off_vir_in4, off_vir_in5);
+  printf ("Session data: %" PRIi64 ",%" PRIi64 ",%" PRIi64 ",%" PRIi64 ",%" PRIi64 ",%" PRIi64 ",%" PRIi64 ",%" PRIi64 ",%" PRIi64 ",%" PRIi64 "\n", off_fd1, off_fd2, off_fd3, off_fd4, off_fd5, off_vir_in1, off_vir_in2, off_vir_in3, off_vir_in4, off_vir_in5);
   fflush (stdout);
 }
 */
 
-bool session_update (long off_fd1, long off_fd2, long off_fd3, long off_fd4, long off_fd5, unsigned long long off_vir_in1, unsigned long long off_vir_in2, unsigned long long off_vir_in3, unsigned long long off_vir_in4, unsigned long long off_vir_in5)
+bool session_update (int64_t off_fd1, int64_t off_fd2, int64_t off_fd3, int64_t off_fd4, int64_t off_fd5, int64_t off_vir_in1, int64_t off_vir_in2, int64_t off_vir_in3, int64_t off_vir_in4, int64_t off_vir_in5)
 {
   rewind (sfp);
-  fprintf (sfp, "%ld %ld %ld %ld %ld %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 " %" PRIu64 "", off_fd1, off_fd2, off_fd3, off_fd4, off_fd5, off_vir_in1, off_vir_in2, off_vir_in3, off_vir_in4, off_vir_in5);
+  fprintf (sfp, "%" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 " %" PRIi64 "", off_fd1, off_fd2, off_fd3, off_fd4, off_fd5, off_vir_in1, off_vir_in2, off_vir_in3, off_vir_in4, off_vir_in5);
   fflush (sfp);
 
   if (ftruncate (fileno (sfp), ftell (sfp)) != 0)
@@ -833,17 +833,17 @@ int main (int argc, char *argv[])
   size_t vir_in5 = 0;
 
   // session/restore
-  long off_fd1 = 0;
-  long off_fd2 = 0;
-  long off_fd3 = 0;
-  long off_fd4 = 0;
-  long off_fd5 = 0;
+  int64_t off_fd1 = 0;
+  int64_t off_fd2 = 0;
+  int64_t off_fd3 = 0;
+  int64_t off_fd4 = 0;
+  int64_t off_fd5 = 0;
 
-  unsigned long long off_vir_in1 = 0, off_vir_in1_init = -1;
-  unsigned long long off_vir_in2 = 0, off_vir_in2_init = -1;
-  unsigned long long off_vir_in3 = 0, off_vir_in3_init = -1;
-  unsigned long long off_vir_in4 = 0, off_vir_in4_init = -1;
-  unsigned long long off_vir_in5 = 0, off_vir_in5_init = -1;
+  int64_t off_vir_in1 = 0, off_vir_in1_init = -1;
+  int64_t off_vir_in2 = 0, off_vir_in2_init = -1;
+  int64_t off_vir_in3 = 0, off_vir_in3_init = -1;
+  int64_t off_vir_in4 = 0, off_vir_in4_init = -1;
+  int64_t off_vir_in5 = 0, off_vir_in5_init = -1;
 
   if (session_isSet || restore_isSet)
   {

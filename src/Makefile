@@ -2,7 +2,33 @@
 ##  Makefile
 ##
 
-CFLAGS += -Wall -W -pipe -O2 -std=gnu99
+DEBUG                   := 0
+
+CFLAGS                  += -Wall -W -pipe -std=gnu99
+
+ifeq ($(DEBUG),0)
+CFLAGS                  += -O2
+ifneq ($(UNAME),Darwin)
+LFLAGS                  += -s
+endif
+else
+ifeq ($(DEBUG),1)
+ifneq ($(UNAME),Darwin)
+CFLAGS                  += -DDEBUG -Og -ggdb
+else
+CFLAGS                  += -DDEBUG -O0 -ggdb
+endif
+else
+ifeq ($(DEBUG),2)
+ifneq ($(UNAME),Darwin)
+CFLAGS                  += -DDEBUG -Og -ggdb
+else
+CFLAGS                  += -DDEBUG -O0 -ggdb
+endif
+CFLAGS                  += -fsanitize=address -fno-omit-frame-pointer
+endif
+endif
+endif
 
 all: clean native
 
@@ -16,6 +42,7 @@ release: native windows
 clean:
 	rm -f ../bin/*
 	rm -f *.bin *.exe
+	rm -rf *.dSYM
 
 ##
 ## native
@@ -32,6 +59,7 @@ native:
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o cleanup-rules.bin cleanup-rules.c
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o combinator.bin combinator.c
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o combinator3.bin combinator3.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o combinatorX.bin combinatorX.c
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o combipow.bin combipow.c
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o ct3_to_ntlm.bin ct3_to_ntlm.c
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o cutb.bin cutb.c
@@ -70,6 +98,7 @@ windows:
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o cleanup-rules.exe cleanup-rules.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o combinator.exe combinator.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o combinator3.exe combinator3.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o combinatorX.exe combinatorX.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o combipow.exe combipow.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o ct3_to_ntlm.exe ct3_to_ntlm.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o cutb.exe cutb.c

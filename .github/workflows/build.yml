@@ -1,0 +1,75 @@
+name: Build Hashcat Utils
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v*
+    paths:
+      - 'src/**'
+      - '.github/workflows/build.yml'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'src/**'
+      - '.github/workflows/build.yml'
+
+jobs:
+  build-linux:
+    strategy:
+      fail-fast: false
+    name: Build Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build
+        run: cd src/ && make
+      - name: Generate artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: hashcat-utils-linux
+          path: src/*.bin
+
+  build-macos:
+    strategy:
+      fail-fast: false
+    name: Build macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build
+        run: cd src/ && make
+      - name: Generate artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: hashcat-utils-macos
+          path: src/*.bin
+
+  build-windows:
+    strategy:
+      fail-fast: false
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - name: Install MSys2
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: |
+            make
+            mingw-w64-x86_64-gcc
+      - uses: actions/checkout@v3
+      # Paths aren't correct in MSys2 for mingw, copy to the correct path for the Makefile
+      - name: Copy CRT_glob.o
+        shell: msys2 {0}
+        run: mkdir -p D:/a/_temp/msys64/usr/x86_64-w64-mingw32/lib && cp D:/a/_temp/msys64/mingw64/lib/CRT_glob.o D:/a/_temp/msys64/usr/x86_64-w64-mingw32/lib/CRT_glob.o
+      - name: Build
+        shell: msys2 {0}
+        run: cd src/ && make windows
+      - name: Generate artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: hashcat-utils-windows
+          path: src/*.exe

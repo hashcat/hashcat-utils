@@ -975,7 +975,7 @@ int main (int argc, char *argv[])
    && (pcap_file_header.linktype != DLT_IEEE802_11_RADIO)
    && (pcap_file_header.linktype != DLT_IEEE802_11_PPI_HDR))
   {
-    fprintf (stderr, "%s: Unsupported linktype detected\n", in);
+    fprintf (stderr, "%s: Unsupported linktype detected %d\n", in, pcap_file_header.linktype);
 
     return -1;
   }

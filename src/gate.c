@@ -17,53 +17,54 @@
  * License.....: MIT
  */
 
-int main (int argc, char *argv[])
+#define MOD_VALUE 3  // Modify the default MOD value here
+#define OFFSET_VALUE 1  // Modify the default OFFSET value here
+
+int main(int argc, char *argv[])
 {
-  if (argc != 3)
-  {
-    fprintf (stderr, "usage: %s mod offset < infile > outfile\n", argv[0]);
+    if (argc != 3)
+    {
+        fprintf(stderr, "Usage: %s mod offset < infile > outfile\n", argv[0]);
+        return -1;
+    }
 
-    return (-1);
-  }
+    const int mod = atoi(argv[1]);
+    const int offset = atoi(argv[2]);
 
-  #ifdef _WINDOWS
-  _setmode (_fileno (stdin), _O_BINARY);
-  #endif
+    if (mod <= 0)
+    {
+        fprintf(stderr, "mod must be a positive integer\n");
+        return -1;
+    }
 
-  const int mod = atoi (argv[1]);
+    if (offset < 0 || offset >= mod)
+    {
+        fprintf(stderr, "offset must be between 0 and mod-1\n");
+        return -1;
+    }
 
-  if (mod < 1)
-  {
-    fprintf (stderr, "mod < 1\n");
+    int pos = 0;
+    char line_buf[BUFSIZ];
 
-    return (-1);
-  }
+    while (fgets(line_buf, sizeof(line_buf), stdin) != NULL)
+    {
+        const size_t line_len = strlen(line_buf);
 
-  const int offset = atoi (argv[2]);
+        if (line_len == 0 || line_buf[line_len - 1] != '\n')
+        {
+            // Line too long, skip it or handle the error accordingly
+            continue;
+        }
 
-  if (offset >= mod)
-  {
-    fprintf (stderr, "offset >= mod\n");
+        if ((pos++ % mod) != offset)
+        {
+            // Line doesn't match the modulo and offset criteria, skip it
+            continue;
+        }
 
-    return (-1);
-  }
+        // Print the line to stdout
+        fputs(line_buf, stdout);
+    }
 
-  int pos = 0;
-
-  char line_buf[BUFSIZ];
-
-  int line_len;
-
-  while ((line_len = fgetl (stdin, BUFSIZ, line_buf)) != -1)
-  {
-    if (line_len == 0) continue;
-
-    if (pos == mod) pos = 0;
-
-    if ((pos++ % mod) != offset) continue;
-
-    puts (line_buf);
-  }
-
-  return 0;
+    return 0;
 }

@@ -54,7 +54,7 @@ while (my $word = <>)
       if ($word_buf[$word_pos] =~ m/[\x00-\x19\x7f-\xff]/)
       {
         # ... escape it in rule syntax.
-        $charspec = '\x' . ord($word_buf[$word_pos]);
+        $charspec = '\x' . unpack("H*", $word_buf[$word_pos]);
       }
       else
       {

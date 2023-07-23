@@ -48,9 +48,22 @@ while (my $word = <>)
 
     for (my $word_pos = 0; $word_pos < $word_len; $word_pos++)
     {
-      my $function_full = $function . $intpos_to_rulepos[$rule_pos + $word_pos] . $word_buf[$word_pos];
+      my $charspec = '';
 
-      push @rule, $function_full;
+      # If the byte is not 7-bit printable ASCII ...
+      if ($word_buf[$word_pos] =~ m/[\x00-\x19\x7f-\xff]/)
+      {
+        # ... escape it in rule syntax.
+        $charspec = '\x' . ord($word_buf[$word_pos]);
+      }
+      else
+      {
+        $charspec = $word_buf[$word_pos];
+      }
+
+      my $function_full = $function . $intpos_to_rulepos[$rule_pos + $word_pos] . $charspec;
+
+      $charspec && push @rule, $function_full;
     }
 
     print join (" ", @rule), "\n";

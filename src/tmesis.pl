@@ -9,7 +9,7 @@ use warnings;
 
 #tmesis will take a wordlist and produce insertion rules that would insert each word of the wordlist to preset positions.
 #For example:
-#Word ‘password’ will create insertion rules that would insert ‘password’ from position 0 to position F (15)  and It will mutate the string ‘123456’ as follows.
+#Word 'password' will create insertion rules that would insert 'password' from position 0 to position F (15), and it will mutate the string '123456' as follows.
 #password123456
 #1password23456
 #12password3456
@@ -19,7 +19,7 @@ use warnings;
 #123456password
 #
 #Hints:
-#*Use tmesis to create rules to attack hashlists the came from the source. Run initial analysis on the cracked passwords , collect the top 10 – 20 words appear on the passwords and use tmesis to generate rules.
+#*Use tmesis to create rules to attack hashlists the came from the source. Run initial analysis on the cracked passwords , collect the top 10 - 20 words appear on the passwords and use tmesis to generate rules.
 #*use tmesis generated rules in combination with best64.rules
 #
 # inspired by T0XlC

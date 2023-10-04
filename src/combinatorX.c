@@ -304,7 +304,12 @@ static bool session_init (bool session, bool restore)
         return false;
       }
       char buf[4] = { 0 };
-      fread (buf, 3, 1, main_ctx.sfp[0]);
+      int nread=fread (buf, 3, 1, main_ctx.sfp[0]);
+      if (nread != 3)
+      {
+        fprintf (stderr, "! fread() failed (%d): %s\n", errno, strerror (errno));
+        return false;
+      }
       if (!strcmp(buf, "end"))
       {
         fprintf (stdout, "This session has already ended.\n");

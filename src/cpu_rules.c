@@ -577,7 +577,7 @@ int generate_random_rule (char rule_buf[RP_RULE_BUFSIZ], uint32_t rp_gen_func_mi
         p1 = get_random_num (0, sizeof (grp_pos));
         rule_buf[rule_pos++] = grp_pos[p1];
         p2 = get_random_num (1, sizeof (grp_pos));
-        rule_buf[rule_pos++] = grp_pos[p1];
+        rule_buf[rule_pos++] = grp_pos[p2];
         p3 = get_random_num (0, sizeof (grp_pos));
         rule_buf[rule_pos++] = grp_pos[p3];
         break;

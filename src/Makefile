@@ -31,6 +31,7 @@ endif
 endif
 
 all: clean native
+	mv *.bin ../bin
 
 release: native windows
 	$(STRIP_NATIVE) *.bin

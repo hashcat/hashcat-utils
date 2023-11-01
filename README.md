@@ -20,7 +20,13 @@ See the hashcat wiki page of hashcat-utils: https://hashcat.net/wiki/doku.php?id
 Compile
 --------------
 
-Simply run make
+Simply run make, like this:
+
+```Makefile
+$ make all
+
+```
+You should see the binaries in `bin/` folder
 
 Binary distribution
 --------------

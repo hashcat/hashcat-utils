@@ -3,8 +3,8 @@
 ##
 
 DEBUG                   := 0
-
-CFLAGS                  += -Wall -W -pipe -std=gnu99
+LEN_MAX=512
+CFLAGS                  += -Wall -W -pipe -std=gnu99 -DLEN_MAX=$(LEN_MAX)
 
 ifeq ($(DEBUG),0)
 CFLAGS                  += -O2

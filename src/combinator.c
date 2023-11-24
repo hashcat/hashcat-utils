@@ -11,10 +11,8 @@
 #include <fcntl.h>
 #include "utils.c"
 
-#define LEN_MAX 32
-
-#define SEGMENT_SIZE  (32 * 1024 * 1024)
-#define SEGMENT_ALIGN ( 8 * 1024)
+#define SEGMENT_SIZE  (LEN_MAX * 1024 * 1024)
+#define SEGMENT_ALIGN (8 * 1024)
 
 /**
  * Name........: combinator

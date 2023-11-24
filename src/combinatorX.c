@@ -29,8 +29,8 @@
 #define PROG_VERSION "1.2"
 #define PROG_RELEASE_DATE "Wed Aug 25 19:42:17 CEST 2021"
 
-#define WORD_MAX_LEN  64
-#define SEGMENT_SIZE  (WORD_MAX_LEN * 1024 * 1024)
+#define MAX_LEN  64
+#define SEGMENT_SIZE  (MAX_LEN * 1024 * 1024)
 #define SEGMENT_ALIGN (8 * 1024)
 
 // lightweight dolphin macro
@@ -1267,7 +1267,7 @@ int main (int argc, char *argv[])
         vir_in[0]--;
       }
 
-      if (vir_in[0] > WORD_MAX_LEN) continue;
+      if (vir_in[0] > MAX_LEN) continue;
       if (maxLen_isSet && vir_in[0] > main_ctx.maxLen) continue;
 
       // restore 1 if needed
@@ -1296,7 +1296,7 @@ int main (int argc, char *argv[])
             vir_in[1]--;
           }
 
-          if (vir_in[1] > WORD_MAX_LEN) continue;
+          if (vir_in[1] > MAX_LEN) continue;
           if (maxLen_isSet && (vir_in[0]+vir_in[1]) > main_ctx.maxLen) continue;
 
           // restore 2 if needed
@@ -1336,7 +1336,7 @@ int main (int argc, char *argv[])
                   vir_in[2]--;
                 }
 
-                if (vir_in[2] > WORD_MAX_LEN) continue;
+                if (vir_in[2] > MAX_LEN) continue;
                 if (maxLen_isSet && (vir_in[0]+vir_in[1]+vir_in[2]) > main_ctx.maxLen) continue;
 
                 // restore 3 if needed
@@ -1377,7 +1377,7 @@ int main (int argc, char *argv[])
                         vir_in[3]--;
                       }
 
-                      if (vir_in[3] > WORD_MAX_LEN) continue;
+                      if (vir_in[3] > MAX_LEN) continue;
                       if (maxLen_isSet && (vir_in[0]+vir_in[1]+vir_in[2]+vir_in[3]) > main_ctx.maxLen) continue;
 
                       // restore 4 if needed
@@ -1419,7 +1419,7 @@ int main (int argc, char *argv[])
                               vir_in[4]--;
                             }
 
-                            if (vir_in[4] > WORD_MAX_LEN) continue;
+                            if (vir_in[4] > MAX_LEN) continue;
                             if (maxLen_isSet && (vir_in[0]+vir_in[1]+vir_in[2]+vir_in[3]+vir_in[4]) > main_ctx.maxLen) continue;
 
                             // restore 5 if needed
@@ -1462,7 +1462,7 @@ int main (int argc, char *argv[])
                                     vir_in[5]--;
                                   }
 
-                                  if (vir_in[5] > WORD_MAX_LEN) continue;
+                                  if (vir_in[5] > MAX_LEN) continue;
                                   if (maxLen_isSet && (vir_in[0]+vir_in[1]+vir_in[2]+vir_in[3]+vir_in[4]+vir_in[5]) > main_ctx.maxLen) continue;
 
                                   // restore 6 if needed
@@ -1506,7 +1506,7 @@ int main (int argc, char *argv[])
                                           vir_in[6]--;
                                         }
 
-                                        if (vir_in[6] > WORD_MAX_LEN) continue;
+                                        if (vir_in[6] > MAX_LEN) continue;
                                         if (maxLen_isSet && (vir_in[0]+vir_in[1]+vir_in[2]+vir_in[3]+vir_in[4]+vir_in[5]+vir_in[6]) > main_ctx.maxLen) continue;
 
                                         // restore 7 if needed
@@ -1551,7 +1551,7 @@ int main (int argc, char *argv[])
                                                 vir_in[7]--;
                                               }
 
-                                              if (vir_in[7] > WORD_MAX_LEN) continue;
+                                              if (vir_in[7] > MAX_LEN) continue;
                                               if (maxLen_isSet && (vir_in[0]+vir_in[1]+vir_in[2]+vir_in[3]+vir_in[4]+vir_in[5]+vir_in[6]+vir_in[7]) > main_ctx.maxLen) continue;
 
                                               // restore 8 if needed

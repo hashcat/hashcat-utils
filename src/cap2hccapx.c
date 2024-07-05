@@ -928,7 +928,7 @@ int main (int argc, char *argv[])
   if (nread != 1)
   {
     fprintf (stderr, "%s: Could not read pcap header\n", in);
-
+    fclose(pcap);
     return -1;
   }
 
@@ -955,7 +955,7 @@ int main (int argc, char *argv[])
   else
   {
     fprintf (stderr, "%s: Invalid pcap header\n", in);
-
+    fclose(pcap);
     return 1;
   }
 
@@ -976,7 +976,7 @@ int main (int argc, char *argv[])
    && (pcap_file_header.linktype != DLT_IEEE802_11_PPI_HDR))
   {
     fprintf (stderr, "%s: Unsupported linktype detected %d\n", in, pcap_file_header.linktype);
-
+    fclose(pcap);
     return -1;
   }
 

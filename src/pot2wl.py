@@ -18,7 +18,7 @@ def hex_to_string(input):
     if input.startswith('$HEX[') and input.endswith(']'):
         hex_part = input[5:-1]
         try:
-            decoded_string = bytes.fromhex(hex_part).decode('utf-8')
+            decoded_string = bytes.fromhex(hex_part).decode('ISO-8859-1')
             return decoded_string
         except ValueError:
             return input

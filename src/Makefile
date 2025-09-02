@@ -3,8 +3,8 @@
 ##
 
 DEBUG                   := 0
-LEN_MAX=512
-CFLAGS                  += -Wall -W -pipe -std=gnu99 -DLEN_MAX=$(LEN_MAX)
+CFLAGS                  += -Wall -W -pipe -std=gnu99
+COMBINATOR_LEN_MAX      := 512
 
 ifeq ($(DEBUG),0)
 CFLAGS                  += -O2
@@ -63,13 +63,13 @@ cleanup-rules.bin: cleanup-rules.c
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
 
 combinator.bin: combinator.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $< -DLEN_MAX=$(COMBINATOR_LEN_MAX)
 
 combinator3.bin: combinator3.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $< -DLEN_MAX=$(COMBINATOR_LEN_MAX)
 
 combinatorX.bin: combinatorX.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $< -DLEN_MAX=$(COMBINATOR_LEN_MAX)
 
 combipow.bin: combipow.c
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
@@ -158,13 +158,13 @@ cleanup-rules.exe: cleanup-rules.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
 
 combinator.exe: combinator.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $< -DLEN_MAX=$(COMBINATOR_LEN_MAX)
 
 combinator3.exe: combinator3.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $< -DLEN_MAX=$(COMBINATOR_LEN_MAX)
 
 combinatorX.exe: combinatorX.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $< -DLEN_MAX=$(COMBINATOR_LEN_MAX)
 
 combipow.exe: combipow.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<

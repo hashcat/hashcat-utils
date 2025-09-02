@@ -12,7 +12,7 @@
 #include "utils.c"
 
 #define LEN_MIN 1
-#define LEN_MAX 4
+#define LEN_MAX 7
 
 /**
  * Name........: expander

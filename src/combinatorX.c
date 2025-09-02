@@ -344,7 +344,7 @@ static bool session_init (bool session, bool restore)
   {
     if (main_ctx.f[i]) MEMORY_FREE_DEL(main_ctx.f[i])
 
-    if (f_tmp[i] == NULL || !strcmp(f_tmp[i], "(null)")) continue;
+    if (f_tmp[i][0] == '\0' || !strcmp(f_tmp[i], "(null)")) continue;
 
     main_ctx.f[i] = strdup (f_tmp[i]);
     MEMORY_FREE_ADD(main_ctx.f[i])
@@ -376,7 +376,7 @@ static bool session_init (bool session, bool restore)
     {
       if (main_ctx.sepStart) MEMORY_FREE_DEL(main_ctx.sepStart)
 
-      if (f_sep[i] == NULL || !strcmp(f_sep[i], "(null)")) continue;
+      if (f_sep[i][0] == '\0' || !strcmp(f_sep[i], "(null)")) continue;
 
       hex_decode ((uint8_t *)f_sep[i], strlen(f_sep[i]), (uint8_t *)f_sep_tmp);
 
@@ -392,7 +392,7 @@ static bool session_init (bool session, bool restore)
     {
       if (main_ctx.sepEnd) MEMORY_FREE_DEL(main_ctx.sepEnd);
 
-      if (f_sep[i] == NULL || !strcmp(f_sep[i], "(null)")) continue;
+      if (f_sep[i][0] == '\0' || !strcmp(f_sep[i], "(null)")) continue;
 
       hex_decode ((uint8_t *)f_sep[i], strlen(f_sep[i]), (uint8_t *)f_sep_tmp);
 
@@ -409,7 +409,7 @@ static bool session_init (bool session, bool restore)
       int sepId = i - 1;
       if (main_ctx.sep[sepId]) MEMORY_FREE_DEL(main_ctx.sep[sepId]);
 
-      if (f_sep[i] == NULL || !strcmp(f_sep[i], "(null)")) continue;
+      if (f_sep[i][0] == '\0' || !strcmp(f_sep[i], "(null)")) continue;
 
       hex_decode ((uint8_t *)f_sep[i], strlen(f_sep[i]), (uint8_t *)f_sep_tmp);
 

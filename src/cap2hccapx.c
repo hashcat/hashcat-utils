@@ -805,7 +805,7 @@ static void process_packet (const u8 *packet, const pcap_pkthdr_t *header)
   {
     // process header: ieee80211
 
-    int addr4_exist = ((frame_control & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) == 
+    int addr4_exist = ((frame_control & (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) ==
     (IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS));
 
     // find offset to llc/snap header
@@ -876,6 +876,13 @@ int main (int argc, char *argv[])
   if ((argc != 3) && (argc != 4) && (argc != 5))
   {
     fprintf (stderr, "usage: %s input.pcap output.hccapx [filter by essid] [additional network essid:bssid]\n", argv[0]);
+
+    return -1;
+  }
+
+  if (1)
+  {
+    fprintf (stderr, "%s: Deprecated Notice. This tool is fully replaced with extraction tools from https://github.com/ZerBea/hcxtools\n", argv[0]);
 
     return -1;
   }

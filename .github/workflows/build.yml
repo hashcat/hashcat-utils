@@ -23,11 +23,11 @@ jobs:
     name: Build Linux
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: Build
         run: cd src/ && make
       - name: Generate artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: hashcat-utils-linux
           path: src/*.bin
@@ -38,11 +38,11 @@ jobs:
     name: Build macOS
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: Build
         run: cd src/ && make
       - name: Generate artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: hashcat-utils-macos
           path: src/*.bin
@@ -60,7 +60,7 @@ jobs:
           install: |
             make
             mingw-w64-x86_64-gcc
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       # Paths aren't correct in MSys2 for mingw, copy to the correct path for the Makefile
       - name: Copy CRT_glob.o
         shell: msys2 {0}
@@ -69,7 +69,7 @@ jobs:
         shell: msys2 {0}
         run: cd src/ && make windows
       - name: Generate artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: hashcat-utils-windows
           path: src/*.exe

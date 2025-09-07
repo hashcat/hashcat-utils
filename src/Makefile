@@ -54,7 +54,7 @@ STRIP_NATIVE   = strip
 CFLAGS_NATIVE  = $(CFLAGS)
 LDFLAGS_NATIVE = $(LDFLAGS)
 
-native: cap2hccapx.bin cleanup-rules.bin combinator.bin combinator3.bin combinatorX.bin combipow.bin ct3_to_ntlm.bin cutb.bin expander.bin gate.bin generate-rules.bin hcstatgen.bin hcstat2gen.bin keyspace.bin len.bin mli2.bin morph.bin permute.bin permute_exist.bin prepare.bin req-include.bin req-exclude.bin rli.bin rli2.bin rules_optimize.bin splitlen.bin strip-bsr.bin strip-bsn.bin
+native: cap2hccapx.bin cleanup-rules.bin combinator.bin combinator3.bin combinatorX.bin combipow.bin ct3_to_ntlm.bin cutb.bin expander.bin gate.bin generate-rules.bin hcstatgen.bin hcstat2gen.bin keyspace.bin len.bin mli2.bin morph.bin ngramX.bin permute.bin permute_exist.bin prepare.bin req-include.bin req-exclude.bin rli.bin rli2.bin rules_optimize.bin splitlen.bin strip-bsr.bin strip-bsn.bin
 
 cap2hccapx.bin: cap2hccapx.c
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
@@ -107,6 +107,9 @@ mli2.bin: mli2.c
 morph.bin: morph.c
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
 
+ngramX.bin: ngramX.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+
 permute.bin: permute.c
 	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
 
@@ -149,7 +152,7 @@ STRIP_WINDOWS  = x86_64-w64-mingw32-strip
 CFLAGS_WINDOWS = $(CFLAGS) -D_WINDOWS
 GLOB_WINDOWS   = /usr/x86_64-w64-mingw32/lib/CRT_glob.o
 
-windows: cap2hccapx.exe cleanup-rules.exe combinator.exe combinator3.exe combinatorX.exe combipow.exe ct3_to_ntlm.exe cutb.exe expander.exe gate.exe generate-rules.exe hcstatgen.exe hcstat2gen.exe keyspace.exe len.exe mli2.exe morph.exe permute.exe permute_exist.exe prepare.exe req-include.exe req-exclude.exe rli.exe rli2.exe rules_optimize.exe splitlen.exe strip-bsr.exe strip-bsn.exe
+windows: cap2hccapx.exe cleanup-rules.exe combinator.exe combinator3.exe combinatorX.exe combipow.exe ct3_to_ntlm.exe cutb.exe expander.exe gate.exe generate-rules.exe hcstatgen.exe hcstat2gen.exe keyspace.exe len.exe mli2.exe morph.exe ngramX.exe permute.exe permute_exist.exe prepare.exe req-include.exe req-exclude.exe rli.exe rli2.exe rules_optimize.exe splitlen.exe strip-bsr.exe strip-bsn.exe
 
 cap2hccapx.exe: cap2hccapx.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
@@ -200,6 +203,9 @@ mli2.exe: mli2.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
 
 morph.exe: morph.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+
+ngramX.exe: ngramX.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
 
 permute.exe: permute.c

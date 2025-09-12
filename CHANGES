@@ -1,3 +1,22 @@
+* v1.9 -> v1.10
+
+- Added ngramX
+- Update github action to have builds after commits work again
+- Fix compile errors, warnings and add deprecation notice for cap2hccapx
+- Upgrade LEN_MAX up to 512 for all combinators by default
+- Create ntlmv1.py
+- Fixed bug in generating random rule in src/cpu_rules.c
+- Makefile: support for building individual binaries
+- tmesis.pl to use \x rule syntax if needed
+- tmesis.pl: escape non-7bit-ASCII bytes in output
+- simplify tmesis.pl source to be ASCII only
+- Added CI/CD building via Github Actions with artifacts
+- Create export_potfile.py
+- Updated combinatorX to version 1.2
+- Added option to have combinator read the first file from stdin
+- Add link to wiki page of hashcat-utils
+- Improve performance of permute.c by using an output buffer
+
 * v1.8 -> v1.9
 
 - Switched C standard from c99 to gnu99

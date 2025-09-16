@@ -90,19 +90,35 @@ def des_encrypt_block(key8_hex, challenge_hex):
 
 
 def recover_key_from_ct3(ct3_hex, challenge_hex, ess_hex=None):
+    # Convert hex inputs to bytes
     ct3_bytes = bytes.fromhex(ct3_hex)
     challenge_bytes = bytes.fromhex(challenge_hex)
 
     if len(ct3_bytes) != 8 or len(challenge_bytes) != 8:
         raise ValueError("ct3 and challenge must be 8 bytes (16 hex chars) each")
 
+    # Convert bytes to integer representation
+    ct3_val = int.from_bytes(ct3_bytes, 'big')
+    challenge_val = int.from_bytes(challenge_bytes, 'big')
+
+    # Handle ESS case using fast MD5 hash
     if ess_hex:
         ess_bytes = bytes.fromhex(ess_hex)
-        if len(ess_bytes) == 24 and ess_bytes[8:] == b'\x00' * 16:
+        if len(ess_bytes) != 24:
+            raise ValueError("ESS must be 24 bytes (48 hex chars)")
+        if ess_bytes[8:] == b'\x00' * 16:
             challenge_bytes = hashlib.md5(challenge_bytes + ess_bytes[:8]).digest()[:8]
+            challenge_val = int.from_bytes(challenge_bytes, 'big')
 
-    for i in range(0x10000):
-        nthash_bytes = [i & 0xFF, (i >> 8) & 0xFF, 0, 0, 0, 0, 0]
+    # **Optimized DES brute-force loop**
+    found_key = None
+    for i in range(0x10000):  # 16-bit key space
+        # **Optimized 7-byte to 8-byte DES key transformation**
+        nthash_bytes = [
+            i & 0xFF,
+            (i >> 8) & 0xFF,
+            0, 0, 0, 0, 0
+        ]
         key_bytes = bytes([
             nthash_bytes[0] | 1,
             ((nthash_bytes[0] << 7) | (nthash_bytes[1] >> 1)) & 0xFF | 1,
@@ -113,15 +129,24 @@ def recover_key_from_ct3(ct3_hex, challenge_hex, ess_hex=None):
             ((nthash_bytes[5] << 2) | (nthash_bytes[6] >> 6)) & 0xFF | 1,
             ((nthash_bytes[6] << 1)) & 0xFF | 1
         ])
+
+        # **Use PyCryptodome for fast DES encryption**
         cipher = DES.new(key_bytes, DES.MODE_ECB)
         encrypted = cipher.encrypt(challenge_bytes)
-        if encrypted == ct3_bytes:
-            return '{:02x}{:02x}'.format(i & 0xFF, (i >> 8) & 0xFF)
 
-    return None
+        # **Fast integer comparison instead of byte-by-byte check**
+        if int.from_bytes(encrypted, 'big') == ct3_val:
+            found_key = i
+            break
+
+    if found_key is None:
+        return None  # Key not found
+
+    # **Return key in correct format (low-order byte first, as in C output)**
+    return f"{found_key & 0xFF:02x}{(found_key >> 8) & 0xFF:02x}"
 
 
-def parse_ntlmv1(ntlmv1_hash, key1=None, key2=None, show_pt3=False, json_mode=False):
+def parse_ntlmv1(ntlmv1_hash, key1=None, key2=None, show_pt3=True, json_mode=False):
     fields = ntlmv1_hash.strip().split(':')
     if len(fields) < 6:
         raise ValueError("Invalid NTLMv1 format")
@@ -165,9 +190,8 @@ def parse_ntlmv1(ntlmv1_hash, key1=None, key2=None, show_pt3=False, json_mode=Fa
             pt2 = des_to_ntlm_slice(key2)
             data["pt2"] = pt2
 
-    if show_pt3 or (data["pt1"] and data["pt2"]):
-        pt3 = recover_key_from_ct3(ct3, challenge, ess)
-        data["pt3"] = pt3
+    pt3 = recover_key_from_ct3(data["ct3"], data["client_challenge"], data["lmresp"])
+    data["pt3"] = pt3
 
     if data["pt1"] and data["pt2"] and data["pt3"]:
         data["ntlm"] = data["pt1"] + data["pt2"] + data["pt3"]
@@ -179,7 +203,7 @@ def parse_ntlmv1(ntlmv1_hash, key1=None, key2=None, show_pt3=False, json_mode=Fa
     return data
 
 
-def parse_mschapv2(mschapv2_input, key1=None, key2=None, show_pt3=False, json_mode=False):
+def parse_mschapv2(mschapv2_input, key1=None, key2=None, json_mode=False):
     """
     Accepts:
       - $MSCHAPv2$<chal8Bhex>$<ntresp24Bhex>
@@ -237,8 +261,7 @@ def parse_mschapv2(mschapv2_input, key1=None, key2=None, show_pt3=False, json_mo
         if encrypted2 and encrypted2.lower() == ct2.lower():
             data["pt2"] = des_to_ntlm_slice(key2)
 
-    if show_pt3 or (data["pt1"] and data["pt2"]):
-        data["pt3"] = recover_key_from_ct3(ct3, chal)
+    data["pt3"] = recover_key_from_ct3(data["ct3"], chal)
 
     if data["pt1"] and data["pt2"] and data["pt3"]:
         data["ntlm"] = data["pt1"] + data["pt2"] + data["pt3"]
@@ -288,7 +311,6 @@ def main():
     parser.add_argument("--99", dest="hash_99", help="$99$ style base64 blob")
     parser.add_argument("--key1", help="16-char DES key hex for CT1")
     parser.add_argument("--key2", help="16-char DES key hex for CT2")
-    parser.add_argument("--ct3", action="store_true", help="Brute-force CT3 key")
     parser.add_argument("--json", action="store_true", help="Output JSON only")
     parser.add_argument("--to99", action="store_true", help="Convert NTLMv1 hash to $99$ format")
     parser.add_argument("--hashcat", action="store_true", help="Generate hashcat format strings for ct1/ct2")
@@ -346,7 +368,6 @@ def main():
             args.ntlmv1,
             key1=args.key1,
             key2=args.key2,
-            show_pt3=args.ct3,
             json_mode=args.json
         )
 
@@ -362,7 +383,6 @@ def main():
                 args.ntlmv1,
                 key1=args.key1,
                 key2=args.key2,
-                show_pt3=args.ct3,      # not required for conversion, but harmless
                 json_mode=True          # suppress prints; we'll control output below
             )
         mschapv2_str = ntlmv1_to_mschapv2(parsed_ntlm)
@@ -402,7 +422,7 @@ def main():
                 args.mschapv2,
                 key1=args.key1,
                 key2=args.key2,
-                show_pt3=args.ct3,
+                show_pt3=True,
                 json_mode=args.json
             )
         except Exception as e:

@@ -84,16 +84,12 @@ endif
 all: clean native
 
 release: native windows
-	$(STRIP_NATIVE) *.bin
-	$(STRIP_WINDOWS) *.exe
-	mv *.bin ../bin
-	mv *.exe ../bin
-	cp -a *.pl ../bin
+	$(STRIP_NATIVE) bin/*.bin
+	$(STRIP_WINDOWS) bin/*.exe
+	cp -a src/*.pl bin
 
 clean:
-	rm -f ../bin/*
-	rm -f *.bin *.exe
-	rm -rf *.dSYM
+	rm -f bin/*
 
 ##
 ## native
@@ -107,92 +103,92 @@ LDFLAGS_NATIVE          := $(LDFLAGS)
 
 native: cap2hccapx.bin cleanup-rules.bin combinator.bin combinator3.bin combinatorX.bin combipow.bin ct3_to_ntlm.bin cutb.bin expander.bin gate.bin generate-rules.bin hcstatgen.bin hcstat2gen.bin keyspace.bin len.bin mli2.bin morph.bin ngramX.bin permute.bin permute_exist.bin prepare.bin req-include.bin req-exclude.bin rli.bin rli2.bin rules_optimize.bin splitlen.bin strip-bsr.bin strip-bsn.bin
 
-cap2hccapx.bin: cap2hccapx.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+cap2hccapx.bin: src/cap2hccapx.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-cleanup-rules.bin: cleanup-rules.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+cleanup-rules.bin: src/cleanup-rules.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-combinator.bin: combinator.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $< -DLEN_MAX=$(COMBINATOR_LEN_MAX)
+combinator.bin: src/combinator.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $< -DLEN_MAX=$(COMBINATOR_LEN_MAX)
 
-combinator3.bin: combinator3.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $< -DLEN_MAX=$(COMBINATOR_LEN_MAX)
+combinator3.bin: src/combinator3.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $< -DLEN_MAX=$(COMBINATOR_LEN_MAX)
 
-combinatorX.bin: combinatorX.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $< -DLEN_MAX=$(COMBINATOR_LEN_MAX)
+combinatorX.bin: src/combinatorX.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $< -DLEN_MAX=$(COMBINATOR_LEN_MAX)
 
-combipow.bin: combipow.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+combipow.bin: src/combipow.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-ct3_to_ntlm.bin: ct3_to_ntlm.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+ct3_to_ntlm.bin: src/ct3_to_ntlm.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-cutb.bin: cutb.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+cutb.bin: src/cutb.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-expander.bin: expander.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+expander.bin: src/expander.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-gate.bin: gate.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+gate.bin: src/gate.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-generate-rules.bin: generate-rules.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+generate-rules.bin: src/generate-rules.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-hcstatgen.bin: hcstatgen.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+hcstatgen.bin: src/hcstatgen.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-hcstat2gen.bin: hcstat2gen.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+hcstat2gen.bin: src/hcstat2gen.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-keyspace.bin: keyspace.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+keyspace.bin: src/keyspace.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-len.bin: len.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+len.bin: src/len.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-mli2.bin: mli2.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+mli2.bin: src/mli2.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-morph.bin: morph.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+morph.bin: src/morph.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-ngramX.bin: ngramX.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+ngramX.bin: src/ngramX.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-permute.bin: permute.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+permute.bin: src/permute.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-permute_exist.bin: permute_exist.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+permute_exist.bin: src/permute_exist.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-prepare.bin: prepare.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+prepare.bin: src/prepare.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-req-include.bin: req-include.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+req-include.bin: src/req-include.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-req-exclude.bin: req-exclude.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+req-exclude.bin: src/req-exclude.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-rli.bin: rli.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+rli.bin: src/rli.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-rli2.bin: rli2.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+rli2.bin: src/rli2.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-rules_optimize.bin: rules_optimize.c cpu_rules.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ rules_optimize.c cpu_rules.c
+rules_optimize.bin: src/rules_optimize.c src/cpu_rules.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ src/rules_optimize.c src/cpu_rules.c
 
-splitlen.bin: splitlen.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+splitlen.bin: src/splitlen.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-strip-bsr.bin: strip-bsr.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+strip-bsr.bin: src/strip-bsr.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
-strip-bsn.bin: strip-bsn.c
-	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o $@ $<
+strip-bsn.bin: src/strip-bsn.c
+	${CC_NATIVE} ${CFLAGS_NATIVE} ${LDFLAGS_NATIVE} -o bin/$@ $<
 
 ##
 ## WINDOWS
@@ -219,89 +215,89 @@ endif
 
 windows: cap2hccapx.exe cleanup-rules.exe combinator.exe combinator3.exe combinatorX.exe combipow.exe ct3_to_ntlm.exe cutb.exe expander.exe gate.exe generate-rules.exe hcstatgen.exe hcstat2gen.exe keyspace.exe len.exe mli2.exe morph.exe ngramX.exe permute.exe permute_exist.exe prepare.exe req-include.exe req-exclude.exe rli.exe rli2.exe rules_optimize.exe splitlen.exe strip-bsr.exe strip-bsn.exe
 
-cap2hccapx.exe: cap2hccapx.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+cap2hccapx.exe: src/cap2hccapx.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-cleanup-rules.exe: cleanup-rules.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+cleanup-rules.exe: src/cleanup-rules.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-combinator.exe: combinator.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $< -DLEN_MAX=$(COMBINATOR_LEN_MAX)
+combinator.exe: src/combinator.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $< -DLEN_MAX=$(COMBINATOR_LEN_MAX)
 
-combinator3.exe: combinator3.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $< -DLEN_MAX=$(COMBINATOR_LEN_MAX)
+combinator3.exe: src/combinator3.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $< -DLEN_MAX=$(COMBINATOR_LEN_MAX)
 
-combinatorX.exe: combinatorX.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $< -DLEN_MAX=$(COMBINATOR_LEN_MAX)
+combinatorX.exe: src/combinatorX.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $< -DLEN_MAX=$(COMBINATOR_LEN_MAX)
 
-combipow.exe: combipow.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+combipow.exe: src/combipow.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-ct3_to_ntlm.exe: ct3_to_ntlm.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+ct3_to_ntlm.exe: src/ct3_to_ntlm.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-cutb.exe: cutb.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+cutb.exe: src/cutb.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-expander.exe: expander.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+expander.exe: src/expander.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-gate.exe: gate.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+gate.exe: src/gate.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-generate-rules.exe: generate-rules.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+generate-rules.exe: src/generate-rules.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-hcstatgen.exe: hcstatgen.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+hcstatgen.exe: src/hcstatgen.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-hcstat2gen.exe: hcstat2gen.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+hcstat2gen.exe: src/hcstat2gen.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-keyspace.exe: keyspace.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+keyspace.exe: src/keyspace.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-len.exe: len.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+len.exe: src/len.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-mli2.exe: mli2.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+mli2.exe: src/mli2.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-morph.exe: morph.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+morph.exe: src/morph.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-ngramX.exe: ngramX.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+ngramX.exe: src/ngramX.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-permute.exe: permute.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+permute.exe: src/permute.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-permute_exist.exe: permute_exist.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+permute_exist.exe: src/permute_exist.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-prepare.exe: prepare.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+prepare.exe: src/prepare.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-req-include.exe: req-include.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+req-include.exe: src/req-include.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-req-exclude.exe: req-exclude.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+req-exclude.exe: src/req-exclude.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-rli.exe: rli.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $< ${GLOB_WINDOWS}
+rli.exe: src/rli.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $< ${GLOB_WINDOWS}
 
-rli2.exe: rli2.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+rli2.exe: src/rli2.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-rules_optimize.exe: rules_optimize.c cpu_rules.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ rules_optimize.c cpu_rules.c
+rules_optimize.exe: src/rules_optimize.c src/cpu_rules.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ src/rules_optimize.c src/cpu_rules.c
 
-splitlen.exe: splitlen.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+splitlen.exe: src/splitlen.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-strip-bsr.exe: strip-bsr.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+strip-bsr.exe: src/strip-bsr.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<
 
-strip-bsn.exe: strip-bsn.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
+strip-bsn.exe: src/strip-bsn.c
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o bin/$@ $<

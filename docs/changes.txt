@@ -2,6 +2,7 @@
 
 - Fixed ct3 and pt3 calculation in ntlmv1.py
 - Moved CHANGES and LICENSE into docs/changes.txt and docs/license.txt
+- Updated build.yml
 - Updated combinatorX: using LEN_MAX from Makefile instead of hardcoded MAX_LEN
 - Updated Makefile
 - Updated README.md

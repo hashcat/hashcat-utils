@@ -25,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Build
-        run: cd src/ && make
+        run: make
       - name: Generate artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -42,7 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Build
-        run: cd src/ && make
+        run: make
       - name: Generate artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -71,7 +71,7 @@ jobs:
         run: mkdir -p D:/a/_temp/msys64/usr/x86_64-w64-mingw32/lib && cp D:/a/_temp/msys64/mingw64/lib/CRT_glob.o D:/a/_temp/msys64/usr/x86_64-w64-mingw32/lib/CRT_glob.o
       - name: Build
         shell: msys2 {0}
-        run: cd src/ && make windows
+        run: make windows
       - name: Generate artifacts
         uses: actions/upload-artifact@v4
         with:

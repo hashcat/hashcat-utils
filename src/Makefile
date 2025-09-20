@@ -87,6 +87,7 @@ release: native windows
 	$(STRIP_NATIVE) bin/*.bin
 	$(STRIP_WINDOWS) bin/*.exe
 	cp -a src/*.pl bin
+	cp -a src/*.py bin
 
 clean:
 	rm -f bin/*

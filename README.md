@@ -1,10 +1,12 @@
-hashcat-utils
-==============
+## *hashcat-utils* ##
 
-Hashcat-utils are a set of small utilities that are useful in advanced password cracking
+**hashcat-utils** are a set of small utilities that are useful in advanced password cracking
 
-Brief description
---------------
+### License ###
+
+**hashcat-utils** is licensed under the MIT license. Refer to [docs/license.txt](docs/license.txt) for more information.
+
+### Brief description ###
 
 They all are packed into multiple stand-alone binaries.
 
@@ -12,17 +14,40 @@ All of these utils are designed to execute only one specific function.
 
 Since they all work with STDIN and STDOUT you can group them into chains.
 
-Detailed description
---------------
+### Detailed description ###
 
 See the hashcat wiki page of hashcat-utils: https://hashcat.net/wiki/doku.php?id=hashcat_utils
 
-Compile
---------------
+### Building ###
 
-Simply run make
+#### Native binaries only
 
-Binary distribution
---------------
+Using gcc
 
-Binaries for Linux, Windows and OSX: https://github.com/hashcat/hashcat-utils/releases
+```bash
+$ make clean && make
+```
+
+Alternatively, using clang
+
+```bash
+$ make clean && make CC=clang
+```
+
+#### Windows binaries only
+
+Using mingw
+
+```bash
+$ make clean && make windows
+```
+
+Alternatively, using clang
+
+```bash
+$ make clean && make windows CC_WINDOWS=clang
+```
+
+### Binary distribution ###
+
+Binaries for Linux and Windows: https://github.com/hashcat/hashcat-utils/releases

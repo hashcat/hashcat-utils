@@ -3,7 +3,58 @@
 ##
 
 DEBUG                   := 0
-CFLAGS                  += -Wall -W -pipe -std=gnu99
+MAINTAINER_MODE         ?= 0
+
+BUILD_MODE              := native
+
+ifneq ($(filter windows release,$(MAKECMDGOALS)),)
+  BUILD_MODE := cross
+endif
+
+##
+## Detect Operating System
+##
+
+UNAME                   := $(shell uname -s)
+
+# we need to strip the windows version number to be able to build hashcat on cygwin hosts
+UNAME                   := $(patsubst CYGWIN_NT-%,CYGWIN,$(UNAME))
+
+# same for msys
+UNAME                   := $(patsubst MSYS_NT-%,MSYS2,$(UNAME))
+UNAME                   := $(patsubst MINGW32_NT-%,MSYS2,$(UNAME))
+UNAME                   := $(patsubst MINGW64_NT-%,MSYS2,$(UNAME))
+
+ifneq ($(BUILD_MODE),native)
+ifeq ($(UNAME),Darwin)
+BREW_MINGW_PREFIX       := $(shell brew --prefix mingw-w64)
+endif
+endif
+
+ifneq ($(DEBUG),0)
+$(info "## Detected Operating System : $(UNAME)")
+$(info "## Detected Build Mode: $(BUILD_MODE)")
+$(info "## Detected CC : $(CC)")
+ifneq ($(BUILD_MODE),native)
+$(info "## Detected CC_WINDOWS : $(CC_WINDOWS)")
+ifeq ($(UNAME),Darwin)
+$(info "## Detected Brew MinGW Prefix: $(BREW_MINGW_PREFIX)")
+endif
+endif
+endif
+
+##
+## General compiler and linker options
+##
+
+CFLAGS                  += -W -Wall -Wextra -pipe -std=gnu99
+
+ifeq ($(MAINTAINER_MODE),0)
+ifeq ($(BUILD_MODE),native)
+CFLAGS                  += -march=native
+endif
+endif
+
 COMBINATOR_LEN_MAX      := 512
 
 ifeq ($(DEBUG),0)
@@ -48,11 +99,11 @@ clean:
 ## native
 ##
 
-CC            ?= gcc
-CC_NATIVE      = $(CC)
-STRIP_NATIVE   = strip
-CFLAGS_NATIVE  = $(CFLAGS)
-LDFLAGS_NATIVE = $(LDFLAGS)
+CC                      ?= gcc
+CC_NATIVE               := $(CC)
+STRIP_NATIVE            := strip
+CFLAGS_NATIVE           := $(CFLAGS)
+LDFLAGS_NATIVE          := $(LDFLAGS)
 
 native: cap2hccapx.bin cleanup-rules.bin combinator.bin combinator3.bin combinatorX.bin combipow.bin ct3_to_ntlm.bin cutb.bin expander.bin gate.bin generate-rules.bin hcstatgen.bin hcstat2gen.bin keyspace.bin len.bin mli2.bin morph.bin ngramX.bin permute.bin permute_exist.bin prepare.bin req-include.bin req-exclude.bin rli.bin rli2.bin rules_optimize.bin splitlen.bin strip-bsr.bin strip-bsn.bin
 
@@ -147,10 +198,24 @@ strip-bsn.bin: strip-bsn.c
 ## WINDOWS
 ##
 
-CC_WINDOWS     = x86_64-w64-mingw32-gcc
-STRIP_WINDOWS  = x86_64-w64-mingw32-strip
-CFLAGS_WINDOWS = $(CFLAGS) -D_WINDOWS
-GLOB_WINDOWS   = /usr/x86_64-w64-mingw32/lib/CRT_glob.o
+CC_WINDOWS              ?= x86_64-w64-mingw32-gcc
+STRIP_WINDOWS           ?= x86_64-w64-mingw32-strip
+
+ifeq (,$(findstring clang, $(CC_WINDOWS)))
+CFLAGS_WINDOWS          := $(CFLAGS) -D_WINDOWS
+else
+CFLAGS_WINDOWS          := --target=x86_64-w64-mingw32
+ifeq ($(UNAME),Darwin)
+CFLAGS_WINDOWS          += --sysroot=$(BREW_MINGW_PREFIX)/toolchain-x86_64
+endif
+CFLAGS_WINDOWS          += $(CFLAGS) -D_WINDOWS
+endif
+
+ifeq ($(UNAME),Darwin)
+GLOB_WINDOWS            := $(BREW_MINGW_PREFIX)/toolchain-x86_64/x86_64-w64-mingw32/lib/CRT_glob.o
+else
+GLOB_WINDOWS            := /usr/x86_64-w64-mingw32/lib/CRT_glob.o
+endif
 
 windows: cap2hccapx.exe cleanup-rules.exe combinator.exe combinator3.exe combinatorX.exe combipow.exe ct3_to_ntlm.exe cutb.exe expander.exe gate.exe generate-rules.exe hcstatgen.exe hcstat2gen.exe keyspace.exe len.exe mli2.exe morph.exe ngramX.exe permute.exe permute_exist.exe prepare.exe req-include.exe req-exclude.exe rli.exe rli2.exe rules_optimize.exe splitlen.exe strip-bsr.exe strip-bsn.exe
 
@@ -224,7 +289,7 @@ req-exclude.exe: req-exclude.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<
 
 rli.exe: rli.c
-	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ rli.c ${GLOB_WINDOWS}
+	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $< ${GLOB_WINDOWS}
 
 rli2.exe: rli2.c
 	${CC_WINDOWS} ${CFLAGS_WINDOWS} -o $@ $<

@@ -26,14 +26,18 @@ jobs:
       - uses: actions/checkout@v5
       - name: Build
         run: make
+      - name: Collect scripts into bin
+        run: |
+          cp src/*.py bin/
+          cp src/*.pl bin/
       - name: Generate artifacts
         uses: actions/upload-artifact@v4
         with:
           name: hashcat-utils-linux
           path: |
             bin/*.bin
-            src/*.py
-            src/*.pl
+            bin/*.py
+            bin/*.pl
 
   build-macos:
     strategy:
@@ -44,14 +48,18 @@ jobs:
       - uses: actions/checkout@v5
       - name: Build
         run: make
+      - name: Collect scripts into bin
+        run: |
+          cp src/*.py bin/
+          cp src/*.pl bin/
       - name: Generate artifacts
         uses: actions/upload-artifact@v4
         with:
           name: hashcat-utils-macos
           path: |
             bin/*.bin
-            src/*.py
-            src/*.pl
+            bin/*.py
+            bin/*.pl
 
   build-windows:
     strategy:
@@ -74,11 +82,15 @@ jobs:
       - name: Build
         shell: msys2 {0}
         run: make windows
+      - name: Collect scripts into bin
+        run: |
+          cp src/*.py bin/
+          cp src/*.pl bin/
       - name: Generate artifacts
         uses: actions/upload-artifact@v4
         with:
           name: hashcat-utils-windows
           path: |
             bin/*.exe
-            src/*.py
-            src/*.pl
+            bin/*.py
+            bin/*.pl

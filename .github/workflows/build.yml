@@ -25,14 +25,19 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Build
-        run: cd src/ && make
+        run: make
+      - name: Collect scripts into bin
+        run: |
+          cp src/*.py bin/
+          cp src/*.pl bin/
       - name: Generate artifacts
         uses: actions/upload-artifact@v4
         with:
           name: hashcat-utils-linux
           path: |
-            src/*.bin
-            src/*.py
+            bin/*.bin
+            bin/*.py
+            bin/*.pl
 
   build-macos:
     strategy:
@@ -42,14 +47,19 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Build
-        run: cd src/ && make
+        run: make
+      - name: Collect scripts into bin
+        run: |
+          cp src/*.py bin/
+          cp src/*.pl bin/
       - name: Generate artifacts
         uses: actions/upload-artifact@v4
         with:
           name: hashcat-utils-macos
           path: |
-            src/*.bin
-            src/*.py
+            bin/*.bin
+            bin/*.py
+            bin/*.pl
 
   build-windows:
     strategy:
@@ -71,11 +81,16 @@ jobs:
         run: mkdir -p D:/a/_temp/msys64/usr/x86_64-w64-mingw32/lib && cp D:/a/_temp/msys64/mingw64/lib/CRT_glob.o D:/a/_temp/msys64/usr/x86_64-w64-mingw32/lib/CRT_glob.o
       - name: Build
         shell: msys2 {0}
-        run: cd src/ && make windows
+        run: make windows
+      - name: Collect scripts into bin
+        run: |
+          cp src/*.py bin/
+          cp src/*.pl bin/
       - name: Generate artifacts
         uses: actions/upload-artifact@v4
         with:
           name: hashcat-utils-windows
           path: |
-            src/*.exe
-            src/*.py
+            bin/*.exe
+            bin/*.py
+            bin/*.pl

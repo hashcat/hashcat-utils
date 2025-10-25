@@ -63,7 +63,7 @@ while (my $word = <>)
 
       my $function_full = $function . $intpos_to_rulepos[$rule_pos + $word_pos] . $charspec;
 
-      $charspec && push @rule, $function_full;
+      push @rule, $function_full;
     }
 
     print join (" ", @rule), "\n";

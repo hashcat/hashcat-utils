@@ -13,6 +13,7 @@ import hashlib
 import binascii
 import json
 from Crypto.Cipher import DES
+import re
 
 
 def f_ntlm_des(key_7_bytes_hex):
@@ -215,14 +216,9 @@ def parse_mschapv2(mschapv2_input, key1=None, key2=None, json_mode=False):
     ntresp = None
     source = None
 
-    if s.startswith("$MSCHAPv2$") or s.startswith("$NETNTLM$") or s.startswith("$NETNTLMv1$"):
-        parts = s.split("$")
-        if len(parts) >= 4:
-            chal = parts[2]
-            ntresp = parts[3]
-            source = parts[1]
-        else:
-            raise ValueError("Invalid $MSCHAPv2$/NETNTLM format")
+    m = re.search(r'\$(MSCHAPv2|NETNTLM|NETNTLMv1)\$([0-9A-Fa-f]{16})\$([0-9A-Fa-f]{48})', s)
+    if m:
+        source, chal, ntresp = m.group(1), m.group(2), m.group(3)
 
     elif ":" in s and "$" not in s:
         fields = s.split(":")
@@ -422,7 +418,6 @@ def main():
                 args.mschapv2,
                 key1=args.key1,
                 key2=args.key2,
-                show_pt3=True,
                 json_mode=args.json
             )
         except Exception as e:

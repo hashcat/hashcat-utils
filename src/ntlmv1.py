@@ -13,7 +13,26 @@ import hashlib
 import binascii
 import json
 from Crypto.Cipher import DES
+from Crypto.Hash import MD4
 import re
+
+
+def generate_ntlm_hash(password):
+    """
+    Generates the NTLM hash (MD4) for a given password.
+    The password is first encoded in UTF-16LE.
+    """
+    # Encode the password in UTF-16LE
+    password_bytes = password.encode('utf-16le')
+
+    # Create an MD4 hash object
+    md4_hash = MD4.new()
+
+    # Update the hash object with the encoded password
+    md4_hash.update(password_bytes)
+
+    # Return the hexadecimal digest of the hash
+    return md4_hash.hexdigest()
 
 
 def f_ntlm_des(key_7_bytes_hex):
@@ -313,6 +332,7 @@ def main():
     parser.add_argument("--nthash", help="32-char hex NTLM hash to compute DES keys and hashcat candidates")
     parser.add_argument("--mschapv2", help="MSCHAPv2 line in $MSCHAPv2$CHALLENGE$NTRESPONSE format")
     parser.add_argument("--to-mschapv2", action="store_true", help="Convert NTLMv1 hash to $MSCHAPv2$ format")
+    parser.add_argument("--password", help="Convert password into des keys for --key1 and --key 2")
 
     args = parser.parse_args()
 
@@ -321,6 +341,19 @@ def main():
         return
 
     output = {}
+
+    # if password is given, and key1/key2 not explicitly set, derive them automatically
+
+    if args.password and (not args.key1 or not args.key2):
+       try:
+            nthash = generate_ntlm_hash(args.password)
+            if not args.nthash:
+                args.nthash = nthash
+            k1, k2, k3 = ntlm_to_des_keys(nthash)
+            args.key1 = k1
+            args.key2 = k2
+       except Exception as e:
+            print(f"[!] Failed to derive DES keys from NTLM hash: {e}")
 
     # If NTLM is given and key1/key2 not explicitly set, derive them automatically
     if args.nthash and (not args.key1 or not args.key2):

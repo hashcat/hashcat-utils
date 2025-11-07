@@ -95,6 +95,8 @@ def decode_and_validate_99(enc_99):
         "ct2": raw[16:24].hex(),
         "pt3": raw[24:26].hex(),
         "ct3": None,
+        "k1": None,
+        "k2": None,
         "pt1": None,
         "pt2": None,
     }
@@ -192,6 +194,8 @@ def parse_ntlmv1(ntlmv1_hash, key1=None, key2=None, show_pt3=True, json_mode=Fal
         "ct1": ct1,
         "ct2": ct2,
         "ct3": ct3,
+        "k1" : None,
+        "k2" : None,
         "pt1": None,
         "pt2": None,
         "pt3": None,
@@ -202,12 +206,14 @@ def parse_ntlmv1(ntlmv1_hash, key1=None, key2=None, show_pt3=True, json_mode=Fal
         encrypted1 = des_encrypt_block(key1, challenge)
         if encrypted1 and encrypted1.lower() == ct1.lower():
             pt1 = des_to_ntlm_slice(key1)
+            data["k1"] = key1
             data["pt1"] = pt1
 
     if key2 and len(key2) == 16:
         encrypted2 = des_encrypt_block(key2, challenge)
         if encrypted2 and encrypted2.lower() == ct2.lower():
             pt2 = des_to_ntlm_slice(key2)
+            data["k2"] = key2
             data["pt2"] = pt2
 
     pt3 = recover_key_from_ct3(data["ct3"], data["client_challenge"], data["lmresp"])
@@ -218,7 +224,7 @@ def parse_ntlmv1(ntlmv1_hash, key1=None, key2=None, show_pt3=True, json_mode=Fal
 
     if not json_mode:
         print("\n[+] NTLMv1 Parsed:")
-        for field in ["username", "domain", "challenge", "ct1", "ct2", "ct3", "pt1", "pt2", "pt3", "ntlm"]:
+        for field in ["username", "domain", "challenge", "ct1", "ct2", "ct3", "k1", "k2" ,"pt1", "pt2", "pt3", "ntlm"]:
             print(f"{field.upper():>12}: {data.get(field)}")
     return data
 
@@ -260,6 +266,8 @@ def parse_mschapv2(mschapv2_input, key1=None, key2=None, json_mode=False):
         "ct1": ct1,
         "ct2": ct2,
         "ct3": ct3,
+        "k1" : None,
+        "k2" : None,
         "pt1": None,
         "pt2": None,
         "pt3": None,
@@ -270,11 +278,13 @@ def parse_mschapv2(mschapv2_input, key1=None, key2=None, json_mode=False):
         encrypted1 = des_encrypt_block(key1, chal)
         if encrypted1 and encrypted1.lower() == ct1.lower():
             data["pt1"] = des_to_ntlm_slice(key1)
+            data["k1"] = key1
 
     if key2 and len(key2) == 16:
         encrypted2 = des_encrypt_block(key2, chal)
         if encrypted2 and encrypted2.lower() == ct2.lower():
             data["pt2"] = des_to_ntlm_slice(key2)
+            data["k2"] = key2
 
     data["pt3"] = recover_key_from_ct3(data["ct3"], chal)
 
@@ -283,7 +293,7 @@ def parse_mschapv2(mschapv2_input, key1=None, key2=None, json_mode=False):
 
     if not json_mode:
         print("\n[+] MSCHAPv2 Parsed:")
-        for field in ["challenge", "ct1", "ct2", "ct3", "pt1", "pt2", "pt3", "ntlm"]:
+        for field in ["challenge", "ct1", "ct2", "ct3", "k1", "k2", "pt1", "pt2", "pt3", "ntlm"]:
             print(f"{field.upper():>12}: {data.get(field)}")
 
     return data
@@ -366,19 +376,19 @@ def main():
         except Exception as e:
             print(f"[!] Failed to derive DES keys from NTLM hash: {e}")
 
-
-
     if args.hash_99:
         data_99 = decode_and_validate_99(args.hash_99)
 
         if args.key1:
             encrypted1 = des_encrypt_block(args.key1, data_99["challenge"])
             if encrypted1 and encrypted1.lower() == data_99["ct1"].lower():
+                data_99["k1"] = args.key1
                 data_99["pt1"] = des_to_ntlm_slice(args.key1)
 
         if args.key2:
             encrypted2 = des_encrypt_block(args.key2, data_99["challenge"])
             if encrypted2 and encrypted2.lower() == data_99["ct2"].lower():
+                data_99["k2"] = args.key2
                 data_99["pt2"] = des_to_ntlm_slice(args.key2)
 
         # Optional: compute full NTLM hash if all parts are present
@@ -389,7 +399,7 @@ def main():
 
         if not args.json:
             print("\n[+] $99$ Parsed:")
-            for field in ["client_challenge", "ct1", "ct2", "ct3", "pt1", "pt2", "pt3", "ntlm"]:
+            for field in ["client_challenge", "ct1", "ct2", "ct3", "k1", "k2", "pt1", "pt2", "pt3", "ntlm"]:
                 print(f"{field.upper():>20}: {data_99.get(field)}")
 
     if args.ntlmv1:
@@ -449,8 +459,8 @@ def main():
         try:
             output["mschapv2"] = parse_mschapv2(
                 args.mschapv2,
-                key1=args.key1,
-                key2=args.key2,
+                args.key1,
+                args.key2,
                 json_mode=args.json
             )
         except Exception as e:

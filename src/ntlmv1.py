@@ -13,6 +13,26 @@ import hashlib
 import binascii
 import json
 from Crypto.Cipher import DES
+from Crypto.Hash import MD4
+import re
+
+
+def generate_ntlm_hash(password):
+    """
+    Generates the NTLM hash (MD4) for a given password.
+    The password is first encoded in UTF-16LE.
+    """
+    # Encode the password in UTF-16LE
+    password_bytes = password.encode('utf-16le')
+
+    # Create an MD4 hash object
+    md4_hash = MD4.new()
+
+    # Update the hash object with the encoded password
+    md4_hash.update(password_bytes)
+
+    # Return the hexadecimal digest of the hash
+    return md4_hash.hexdigest()
 
 
 def f_ntlm_des(key_7_bytes_hex):
@@ -75,6 +95,8 @@ def decode_and_validate_99(enc_99):
         "ct2": raw[16:24].hex(),
         "pt3": raw[24:26].hex(),
         "ct3": None,
+        "k1": None,
+        "k2": None,
         "pt1": None,
         "pt2": None,
     }
@@ -172,6 +194,8 @@ def parse_ntlmv1(ntlmv1_hash, key1=None, key2=None, show_pt3=True, json_mode=Fal
         "ct1": ct1,
         "ct2": ct2,
         "ct3": ct3,
+        "k1" : None,
+        "k2" : None,
         "pt1": None,
         "pt2": None,
         "pt3": None,
@@ -198,7 +222,7 @@ def parse_ntlmv1(ntlmv1_hash, key1=None, key2=None, show_pt3=True, json_mode=Fal
 
     if not json_mode:
         print("\n[+] NTLMv1 Parsed:")
-        for field in ["username", "domain", "challenge", "ct1", "ct2", "ct3", "pt1", "pt2", "pt3", "ntlm"]:
+        for field in ["username", "domain", "challenge", "ct1", "ct2", "ct3" ,"pt1", "pt2", "pt3", "ntlm"]:
             print(f"{field.upper():>12}: {data.get(field)}")
     return data
 
@@ -215,14 +239,9 @@ def parse_mschapv2(mschapv2_input, key1=None, key2=None, json_mode=False):
     ntresp = None
     source = None
 
-    if s.startswith("$MSCHAPv2$") or s.startswith("$NETNTLM$") or s.startswith("$NETNTLMv1$"):
-        parts = s.split("$")
-        if len(parts) >= 4:
-            chal = parts[2]
-            ntresp = parts[3]
-            source = parts[1]
-        else:
-            raise ValueError("Invalid $MSCHAPv2$/NETNTLM format")
+    m = re.search(r'\$(MSCHAPv2|NETNTLM|NETNTLMv1)\$([0-9A-Fa-f]{16})\$([0-9A-Fa-f]{48})', s)
+    if m:
+        source, chal, ntresp = m.group(1), m.group(2), m.group(3)
 
     elif ":" in s and "$" not in s:
         fields = s.split(":")
@@ -245,6 +264,8 @@ def parse_mschapv2(mschapv2_input, key1=None, key2=None, json_mode=False):
         "ct1": ct1,
         "ct2": ct2,
         "ct3": ct3,
+        "k1" : None,
+        "k2" : None,
         "pt1": None,
         "pt2": None,
         "pt3": None,
@@ -317,6 +338,7 @@ def main():
     parser.add_argument("--nthash", help="32-char hex NTLM hash to compute DES keys and hashcat candidates")
     parser.add_argument("--mschapv2", help="MSCHAPv2 line in $MSCHAPv2$CHALLENGE$NTRESPONSE format")
     parser.add_argument("--to-mschapv2", action="store_true", help="Convert NTLMv1 hash to $MSCHAPv2$ format")
+    parser.add_argument("--password", help="Convert password into des keys for --key1 and --key 2")
 
     args = parser.parse_args()
 
@@ -325,6 +347,19 @@ def main():
         return
 
     output = {}
+
+    # if password is given, and key1/key2 not explicitly set, derive them automatically
+
+    if args.password and (not args.key1 or not args.key2):
+       try:
+            nthash = generate_ntlm_hash(args.password)
+            if not args.nthash:
+                args.nthash = nthash
+            k1, k2, k3 = ntlm_to_des_keys(nthash)
+            args.key1 = k1
+            args.key2 = k2
+       except Exception as e:
+            print(f"[!] Failed to derive DES keys from NTLM hash: {e}")
 
     # If NTLM is given and key1/key2 not explicitly set, derive them automatically
     if args.nthash and (not args.key1 or not args.key2):
@@ -337,19 +372,19 @@ def main():
         except Exception as e:
             print(f"[!] Failed to derive DES keys from NTLM hash: {e}")
 
-
-
     if args.hash_99:
         data_99 = decode_and_validate_99(args.hash_99)
 
         if args.key1:
             encrypted1 = des_encrypt_block(args.key1, data_99["challenge"])
             if encrypted1 and encrypted1.lower() == data_99["ct1"].lower():
+                data_99["k1"] = args.key1
                 data_99["pt1"] = des_to_ntlm_slice(args.key1)
 
         if args.key2:
             encrypted2 = des_encrypt_block(args.key2, data_99["challenge"])
             if encrypted2 and encrypted2.lower() == data_99["ct2"].lower():
+                data_99["k2"] = args.key2
                 data_99["pt2"] = des_to_ntlm_slice(args.key2)
 
         # Optional: compute full NTLM hash if all parts are present
@@ -360,7 +395,7 @@ def main():
 
         if not args.json:
             print("\n[+] $99$ Parsed:")
-            for field in ["client_challenge", "ct1", "ct2", "ct3", "pt1", "pt2", "pt3", "ntlm"]:
+            for field in ["client_challenge", "ct1", "ct2", "ct3", "k1", "k2", "pt1", "pt2", "pt3", "ntlm"]:
                 print(f"{field.upper():>20}: {data_99.get(field)}")
 
     if args.ntlmv1:
@@ -420,9 +455,8 @@ def main():
         try:
             output["mschapv2"] = parse_mschapv2(
                 args.mschapv2,
-                key1=args.key1,
-                key2=args.key2,
-                show_pt3=True,
+                args.key1,
+                args.key2,
                 json_mode=args.json
             )
         except Exception as e:

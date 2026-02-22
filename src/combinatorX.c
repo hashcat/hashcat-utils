@@ -1,7 +1,7 @@
 /**
  * Name........: combinatorX
  * Author......: Gabriele 'matrix' Gristina <gabriele.gristina@gmail.com>
- * Version.....: 1.2
+ * Version.....: 1.3
  * Date........: Wed Aug 25 19:42:17 CEST 2021
  * License.....: MIT
  *
@@ -26,10 +26,11 @@
 #include <signal.h>
 #include <inttypes.h>
 
-#define PROG_VERSION "1.3"
+#define PROG_VERSION "1.2"
 #define PROG_RELEASE_DATE "Wed Aug 25 19:42:17 CEST 2021"
 
-#define SEGMENT_SIZE  (LEN_MAX * 1024 * 1024)
+#define WORD_MAX_LEN  64
+#define SEGMENT_SIZE  (WORD_MAX_LEN * 1024 * 1024)
 #define SEGMENT_ALIGN (8 * 1024)
 
 // lightweight dolphin macro
@@ -281,42 +282,62 @@ static bool session_init (bool session, bool restore)
   }
   else
   {
-    if (fseek (main_ctx.sfp[0], 0L, SEEK_END) != 0)
+    // if (fseek (main_ctx.sfp[0], 0L, SEEK_END) != 0)
+    // {
+    //   fprintf (stderr, "! fseek() failed (%d): %s\n", errno, strerror (errno));
+    //   fclose (main_ctx.sfp[0]); main_ctx.sfp[0] = NULL;
+    //   fclose (main_ctx.sfp[1]); main_ctx.sfp[1] = NULL;
+    //   fclose (main_ctx.sfp[2]); main_ctx.sfp[2] = NULL;
+    //   return false;
+    // }
+
+    // int64_t s = ftell (main_ctx.sfp[0]);
+    // if (s > 3)
+    // {
+    //   s -= 3;
+    //   if (fseek (main_ctx.sfp[0], s, SEEK_SET) != 0)
+    //   {
+    //     fprintf (stderr, "! fseek() failed (%d): %s\n", errno, strerror (errno));
+    //     fclose (main_ctx.sfp[0]); main_ctx.sfp[0] = NULL;
+    //     fclose (main_ctx.sfp[1]); main_ctx.sfp[1] = NULL;
+    //     fclose (main_ctx.sfp[2]); main_ctx.sfp[2] = NULL;
+    //     return false;
+    //   }
+    //   char buf[4] = { 0 };
+    //   int nread=fread (buf, 3, 1, main_ctx.sfp[0]);
+    //   if (nread != 3)
+    //   {
+    //     fprintf (stderr, "! fread() failed (%d): %s\n", errno, strerror (errno));
+    //     return false;
+    //   }
+    //   if (!strcmp(buf, "end"))
+    //   {
+    //     fprintf (stdout, "This session has already ended.\n");
+    //     fclose (main_ctx.sfp[0]); main_ctx.sfp[0] = NULL;
+    //     fclose (main_ctx.sfp[1]); main_ctx.sfp[1] = NULL;
+    //     fclose (main_ctx.sfp[2]); main_ctx.sfp[2] = NULL;
+    //     return false;
+    //   }
+    // }
+    // rewind (main_ctx.sfp[0]);
+    char buffer[256];
+    rewind (main_ctx.sfp[0]);
+    if(fgets (buffer, sizeof (buffer), main_ctx.sfp[0]) == NULL)
     {
-      fprintf (stderr, "! fseek() failed (%d): %s\n", errno, strerror (errno));
+      fprintf (stderr, "! Can not read session file \n");
       fclose (main_ctx.sfp[0]); main_ctx.sfp[0] = NULL;
       fclose (main_ctx.sfp[1]); main_ctx.sfp[1] = NULL;
       fclose (main_ctx.sfp[2]); main_ctx.sfp[2] = NULL;
       return false;
     }
-
-    int64_t s = ftell (main_ctx.sfp[0]);
-    if (s > 3)
+    char *end_pos = strstr(buffer, " end");
+    if(end_pos != NULL && (end_pos - buffer + 4) == strlen(buffer))
     {
-      s -= 3;
-      if (fseek (main_ctx.sfp[0], s, SEEK_SET) != 0)
-      {
-        fprintf (stderr, "! fseek() failed (%d): %s\n", errno, strerror (errno));
-        fclose (main_ctx.sfp[0]); main_ctx.sfp[0] = NULL;
-        fclose (main_ctx.sfp[1]); main_ctx.sfp[1] = NULL;
-        fclose (main_ctx.sfp[2]); main_ctx.sfp[2] = NULL;
-        return false;
-      }
-      char buf[4] = { 0 };
-      int nread=fread (buf, 3, 1, main_ctx.sfp[0]);
-      if (nread != 3)
-      {
-        fprintf (stderr, "! fread() failed (%d): %s\n", errno, strerror (errno));
-        return false;
-      }
-      if (!strcmp(buf, "end"))
-      {
-        fprintf (stdout, "This session has already ended.\n");
-        fclose (main_ctx.sfp[0]); main_ctx.sfp[0] = NULL;
-        fclose (main_ctx.sfp[1]); main_ctx.sfp[1] = NULL;
-        fclose (main_ctx.sfp[2]); main_ctx.sfp[2] = NULL;
-        return false;
-      }
+      fprintf (stdout, "This session has already ended.\n");
+      fclose (main_ctx.sfp[0]); main_ctx.sfp[0] = NULL;
+      fclose (main_ctx.sfp[1]); main_ctx.sfp[1] = NULL;
+      fclose (main_ctx.sfp[2]); main_ctx.sfp[2] = NULL;
+      return false;
     }
     rewind (main_ctx.sfp[0]);
   }
@@ -343,7 +364,7 @@ static bool session_init (bool session, bool restore)
   {
     if (main_ctx.f[i]) MEMORY_FREE_DEL(main_ctx.f[i])
 
-    if (f_tmp[i][0] == '\0' || !strcmp(f_tmp[i], "(null)")) continue;
+    if (f_tmp[i] == NULL || !strcmp(f_tmp[i], "(null)")) continue;
 
     main_ctx.f[i] = strdup (f_tmp[i]);
     MEMORY_FREE_ADD(main_ctx.f[i])
@@ -375,7 +396,7 @@ static bool session_init (bool session, bool restore)
     {
       if (main_ctx.sepStart) MEMORY_FREE_DEL(main_ctx.sepStart)
 
-      if (f_sep[i][0] == '\0' || !strcmp(f_sep[i], "(null)")) continue;
+      if (f_sep[i] == NULL || !strcmp(f_sep[i], "(null)")) continue;
 
       hex_decode ((uint8_t *)f_sep[i], strlen(f_sep[i]), (uint8_t *)f_sep_tmp);
 
@@ -391,7 +412,7 @@ static bool session_init (bool session, bool restore)
     {
       if (main_ctx.sepEnd) MEMORY_FREE_DEL(main_ctx.sepEnd);
 
-      if (f_sep[i][0] == '\0' || !strcmp(f_sep[i], "(null)")) continue;
+      if (f_sep[i] == NULL || !strcmp(f_sep[i], "(null)")) continue;
 
       hex_decode ((uint8_t *)f_sep[i], strlen(f_sep[i]), (uint8_t *)f_sep_tmp);
 
@@ -408,7 +429,7 @@ static bool session_init (bool session, bool restore)
       int sepId = i - 1;
       if (main_ctx.sep[sepId]) MEMORY_FREE_DEL(main_ctx.sep[sepId]);
 
-      if (f_sep[i][0] == '\0' || !strcmp(f_sep[i], "(null)")) continue;
+      if (f_sep[i] == NULL || !strcmp(f_sep[i], "(null)")) continue;
 
       hex_decode ((uint8_t *)f_sep[i], strlen(f_sep[i]), (uint8_t *)f_sep_tmp);
 
@@ -1266,7 +1287,7 @@ int main (int argc, char *argv[])
         vir_in[0]--;
       }
 
-      if (vir_in[0] > LEN_MAX) continue;
+      if (vir_in[0] > WORD_MAX_LEN) continue;
       if (maxLen_isSet && vir_in[0] > main_ctx.maxLen) continue;
 
       // restore 1 if needed
@@ -1295,7 +1316,7 @@ int main (int argc, char *argv[])
             vir_in[1]--;
           }
 
-          if (vir_in[1] > LEN_MAX) continue;
+          if (vir_in[1] > WORD_MAX_LEN) continue;
           if (maxLen_isSet && (vir_in[0]+vir_in[1]) > main_ctx.maxLen) continue;
 
           // restore 2 if needed
@@ -1335,7 +1356,7 @@ int main (int argc, char *argv[])
                   vir_in[2]--;
                 }
 
-                if (vir_in[2] > LEN_MAX) continue;
+                if (vir_in[2] > WORD_MAX_LEN) continue;
                 if (maxLen_isSet && (vir_in[0]+vir_in[1]+vir_in[2]) > main_ctx.maxLen) continue;
 
                 // restore 3 if needed
@@ -1376,7 +1397,7 @@ int main (int argc, char *argv[])
                         vir_in[3]--;
                       }
 
-                      if (vir_in[3] > LEN_MAX) continue;
+                      if (vir_in[3] > WORD_MAX_LEN) continue;
                       if (maxLen_isSet && (vir_in[0]+vir_in[1]+vir_in[2]+vir_in[3]) > main_ctx.maxLen) continue;
 
                       // restore 4 if needed
@@ -1418,7 +1439,7 @@ int main (int argc, char *argv[])
                               vir_in[4]--;
                             }
 
-                            if (vir_in[4] > LEN_MAX) continue;
+                            if (vir_in[4] > WORD_MAX_LEN) continue;
                             if (maxLen_isSet && (vir_in[0]+vir_in[1]+vir_in[2]+vir_in[3]+vir_in[4]) > main_ctx.maxLen) continue;
 
                             // restore 5 if needed
@@ -1461,7 +1482,7 @@ int main (int argc, char *argv[])
                                     vir_in[5]--;
                                   }
 
-                                  if (vir_in[5] > LEN_MAX) continue;
+                                  if (vir_in[5] > WORD_MAX_LEN) continue;
                                   if (maxLen_isSet && (vir_in[0]+vir_in[1]+vir_in[2]+vir_in[3]+vir_in[4]+vir_in[5]) > main_ctx.maxLen) continue;
 
                                   // restore 6 if needed
@@ -1505,7 +1526,7 @@ int main (int argc, char *argv[])
                                           vir_in[6]--;
                                         }
 
-                                        if (vir_in[6] > LEN_MAX) continue;
+                                        if (vir_in[6] > WORD_MAX_LEN) continue;
                                         if (maxLen_isSet && (vir_in[0]+vir_in[1]+vir_in[2]+vir_in[3]+vir_in[4]+vir_in[5]+vir_in[6]) > main_ctx.maxLen) continue;
 
                                         // restore 7 if needed
@@ -1550,7 +1571,7 @@ int main (int argc, char *argv[])
                                                 vir_in[7]--;
                                               }
 
-                                              if (vir_in[7] > LEN_MAX) continue;
+                                              if (vir_in[7] > WORD_MAX_LEN) continue;
                                               if (maxLen_isSet && (vir_in[0]+vir_in[1]+vir_in[2]+vir_in[3]+vir_in[4]+vir_in[5]+vir_in[6]+vir_in[7]) > main_ctx.maxLen) continue;
 
                                               // restore 8 if needed

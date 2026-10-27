@@ -17,6 +17,31 @@ from Crypto.Hash import MD4
 import re
 
 
+def ntlm_hex_to_deskeys(ntlm_hex: str) -> tuple[str, str]:
+    """
+    NTLM (32 hex chars) -> two DES keys (16 hex chars each).
+    Parity is FORCED to 1 and appended as the LSB of each output byte
+    (matches your original behavior).
+    """
+    ntlm_hex = ntlm_hex.strip().lower()
+    PARITY = 1  # forced
+
+    def expand(part_hex: str) -> str:
+        b = bytes.fromhex(part_hex)  # 7 bytes (56 bits)
+        out = bytearray(8)
+        for j in range(8):
+            v = 0
+            for k in range(7):
+                i = 7 * j + k
+                src_byte = i // 8
+                src_bit = 7 - (i % 8)          # MSB-first
+                v = (v << 1) | ((b[src_byte] >> src_bit) & 1)
+            out[j] = (v << 1) | PARITY         # parity as LSB
+        return out.hex()
+
+    return expand(ntlm_hex[:14]), expand(ntlm_hex[14:28])
+
+
 def generate_ntlm_hash(password):
     """
     Generates the NTLM hash (MD4) for a given password.
@@ -94,11 +119,6 @@ def decode_and_validate_99(enc_99):
         "ct1": raw[8:16].hex(),
         "ct2": raw[16:24].hex(),
         "pt3": raw[24:26].hex(),
-        "ct3": None,
-        "k1": None,
-        "k2": None,
-        "pt1": None,
-        "pt2": None,
     }
 
 
@@ -183,7 +203,6 @@ def parse_ntlmv1(ntlmv1_hash, key1=None, key2=None, show_pt3=True, json_mode=Fal
         challenge = m.digest()[:8].hex()
 
     data = {
-        "source": "ntlmv1",
         "username": user,
         "domain": domain,
         "client_challenge": fields[5],
@@ -193,13 +212,7 @@ def parse_ntlmv1(ntlmv1_hash, key1=None, key2=None, show_pt3=True, json_mode=Fal
         "ntresp": ntresp,
         "ct1": ct1,
         "ct2": ct2,
-        "ct3": ct3,
-        "k1" : None,
-        "k2" : None,
-        "pt1": None,
-        "pt2": None,
-        "pt3": None,
-        "ntlm": None
+        "ct3": ct3
     }
 
     if key1 and len(key1) == 16:
@@ -217,23 +230,33 @@ def parse_ntlmv1(ntlmv1_hash, key1=None, key2=None, show_pt3=True, json_mode=Fal
     pt3 = recover_key_from_ct3(data["ct3"], data["client_challenge"], data["lmresp"])
     data["pt3"] = pt3
 
-    if data["pt1"] and data["pt2"] and data["pt3"]:
-        data["ntlm"] = data["pt1"] + data["pt2"] + data["pt3"]
+    if data.get("pt1") and data.get("pt2") and data.get("pt3"):
+        data["ntlm"] = data.get("pt1") + data.get("pt2") + data.get("pt3")
+
+    if key1 and len(key1) == 16:
+        data["key1"] = key1
+    if key2 and len(key2) == 16:
+        data["key2"] = key2
 
     if not json_mode:
         print("\n[+] NTLMv1 Parsed:")
-        for field in ["username", "domain", "challenge", "ct1", "ct2", "ct3" ,"pt1", "pt2", "pt3", "ntlm"]:
-            print(f"{field.upper():>12}: {data.get(field)}")
+        width = max(len(k) for k in data)
+        for k, v in data.items():
+            print(f"{k.upper():>{width}}: {v}")
     return data
 
 
 def parse_mschapv2(mschapv2_input, key1=None, key2=None, json_mode=False):
     """
     Accepts:
-      - $MSCHAPv2$<chal8Bhex>$<ntresp24Bhex>
       - $NETNTLM$... or $NETNTLMv1$... (treated the same)
       - Colon form: <user>::<domain>:<auth>:<peer>:<ntresp> → last two are challenge + NT response
     """
+    # Look I vibe coded this section, I need to fix it, this section is bad and I'm sorry
+    # - EvilMog
+    # use the JTR version out of EAP-MANA, you basically just need to parse enough info to get
+    # the challenge, and the ntresponse, the "source" is basically a marker to determine how
+    # this was derived, which parser
     s = mschapv2_input.strip()
     chal = None
     ntresp = None
@@ -258,24 +281,18 @@ def parse_mschapv2(mschapv2_input, key1=None, key2=None, json_mode=False):
     ct1, ct2, ct3 = ntresp[0:16], ntresp[16:32], ntresp[32:48]
 
     data = {
-        "source": source,
         "challenge": chal,
         "client_challenge": chal,
         "ct1": ct1,
         "ct2": ct2,
-        "ct3": ct3,
-        "k1" : None,
-        "k2" : None,
-        "pt1": None,
-        "pt2": None,
-        "pt3": None,
-        "ntlm": None
+        "ct3": ct3
     }
 
     if key1 and len(key1) == 16:
         encrypted1 = des_encrypt_block(key1, chal)
         if encrypted1 and encrypted1.lower() == ct1.lower():
             data["pt1"] = des_to_ntlm_slice(key1)
+
 
     if key2 and len(key2) == 16:
         encrypted2 = des_encrypt_block(key2, chal)
@@ -284,13 +301,20 @@ def parse_mschapv2(mschapv2_input, key1=None, key2=None, json_mode=False):
 
     data["pt3"] = recover_key_from_ct3(data["ct3"], chal)
 
-    if data["pt1"] and data["pt2"] and data["pt3"]:
+    if data.get("pt1") and data.get("pt2") and data.get("pt3"):
         data["ntlm"] = data["pt1"] + data["pt2"] + data["pt3"]
+
+    if key1 and len(key1) == 16:
+        data["key1"] = key1
+    if key2 and len(key2) == 16:
+        data["key2"] = key2
 
     if not json_mode:
         print("\n[+] MSCHAPv2 Parsed:")
-        for field in ["challenge", "ct1", "ct2", "ct3", "pt1", "pt2", "pt3", "ntlm"]:
-            print(f"{field.upper():>12}: {data.get(field)}")
+        width = max(len(k) for k in data)
+        for k, v in data.items():
+            print(f"{k.upper():>{width}}: {v}")
+
 
     return data
 
@@ -309,23 +333,6 @@ def ntlmv1_to_99(parsed):
         print(f"[-] Failed to convert to $99$: {e}")
         return None
 
-
-def ntlmv1_to_mschapv2(parsed):
-    """
-    Build $MSCHAPv2$ line from a parsed NTLMv1 dict.
-    Requires: parsed["challenge"], ["ct1"], ["ct2"], ["ct3"].
-    """
-    challenge = parsed.get("challenge")
-    ct1 = parsed.get("ct1")
-    ct2 = parsed.get("ct2")
-    ct3 = parsed.get("ct3")
-
-    if not (challenge and ct1 and ct2 and ct3):
-        raise ValueError("Missing fields to build $MSCHAPv2$ (need challenge, ct1, ct2, ct3)")
-
-    return f"$MSCHAPv2${challenge}${ct1}{ct2}{ct3}"
-
-
 def main():
     parser = argparse.ArgumentParser(description="NTLMv1/$99$ parser with correct DES key handling and CT3 recovery.")
     parser.add_argument("--ntlmv1", help="NTLMv1 hash (Responder format)")
@@ -333,11 +340,9 @@ def main():
     parser.add_argument("--key1", help="16-char DES key hex for CT1")
     parser.add_argument("--key2", help="16-char DES key hex for CT2")
     parser.add_argument("--json", action="store_true", help="Output JSON only")
-    parser.add_argument("--to99", action="store_true", help="Convert NTLMv1 hash to $99$ format")
     parser.add_argument("--hashcat", action="store_true", help="Generate hashcat format strings for ct1/ct2")
     parser.add_argument("--nthash", help="32-char hex NTLM hash to compute DES keys and hashcat candidates")
-    parser.add_argument("--mschapv2", help="MSCHAPv2 line in $MSCHAPv2$CHALLENGE$NTRESPONSE format")
-    parser.add_argument("--to-mschapv2", action="store_true", help="Convert NTLMv1 hash to $MSCHAPv2$ format")
+    parser.add_argument("--mschapv2", help="jtr format MSCHAPv2 Hash")
     parser.add_argument("--password", help="Convert password into des keys for --key1 and --key 2")
 
     args = parser.parse_args()
@@ -355,7 +360,7 @@ def main():
             nthash = generate_ntlm_hash(args.password)
             if not args.nthash:
                 args.nthash = nthash
-            k1, k2, k3 = ntlm_to_des_keys(nthash)
+            k1, k2 = ntlm_hex_to_deskeys(args.nthash)
             args.key1 = k1
             args.key2 = k2
        except Exception as e:
@@ -364,7 +369,7 @@ def main():
     # If NTLM is given and key1/key2 not explicitly set, derive them automatically
     if args.nthash and (not args.key1 or not args.key2):
         try:
-            k1, k2, k3 = ntlm_to_des_keys(args.nthash)
+            k1, k2 = ntlm_hex_to_deskeys(args.nthash)
             if not args.key1:
                 args.key1 = k1
             if not args.key2:
@@ -407,49 +412,6 @@ def main():
         )
 
     # Convert NTLMv1 -> $MSCHAPv2$
-    if args.to_mschapv2:
-        if not args.ntlmv1:
-            print("[-] --to-mschapv2 requires --ntlmv1")
-            return
-        # Reuse already-parsed data if available; otherwise parse once here.
-        parsed_ntlm = output.get("ntlmv1")
-        if not parsed_ntlm:
-            parsed_ntlm = parse_ntlmv1(
-                args.ntlmv1,
-                key1=args.key1,
-                key2=args.key2,
-                json_mode=True          # suppress prints; we'll control output below
-            )
-        mschapv2_str = ntlmv1_to_mschapv2(parsed_ntlm)
-        if args.json:
-            output["mschapv2"] = mschapv2_str
-        else:
-            print(mschapv2_str)
-        # If you only want conversion output, you can `return` here.
-        # Otherwise let the script continue to any other selected actions.
-
-    if args.to99:
-        if not args.ntlmv1:
-            print("[-] --to99 requires --ntlmv1")
-        else:
-            # Force pt3 recovery during parse
-            parsed = parse_ntlmv1(
-                args.ntlmv1,
-                key1=args.key1,
-                key2=args.key2,
-                show_pt3=True,
-                json_mode=args.json
-            )
-            result = ntlmv1_to_99(parsed)
-            if args.json:
-                output = {
-                    "ntlmv1": parsed,
-                    "$99$": result
-                }
-                print(json.dumps(output, indent=2))
-            else:
-                print(f"[+] Converted to $99$:\n{result}")
-        return  # Skip rest of the logic
 
     if args.mschapv2:
         try:
